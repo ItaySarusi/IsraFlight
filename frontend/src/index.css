@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-secondary;
+  }
+}
+
+@layer components {
+  .neo-button {
+    @apply px-4 py-2 rounded-lg shadow-neo 
+           hover:shadow-neo-sm active:shadow-neo-inner
+           transition-shadow duration-200 ease-in-out;
+  }
+
+  .glass-panel {
+    @apply bg-background-glass backdrop-blur-glass
+           rounded-xl border border-white/20
+           shadow-neo;
+  }
+}
