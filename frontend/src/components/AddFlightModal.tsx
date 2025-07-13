@@ -10,7 +10,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FlightFormData, FlightStatus } from '../types/flight';
 
 interface AddFlightModalProps {
@@ -46,6 +46,30 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
     gate: '',
   });
 
+  // Reset form when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        flightNumber: '',
+        destination: '',
+        departureTime: '',
+        gate: '',
+      });
+    }
+  }, [isOpen]);
+
+  // Reset form when flight is successfully added (when loading changes from true to false)
+  useEffect(() => {
+    if (!isLoading && isOpen) {
+      setFormData({
+        flightNumber: '',
+        destination: '',
+        departureTime: '',
+        gate: '',
+      });
+    }
+  }, [isLoading, isOpen]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
@@ -59,12 +83,23 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
     }));
   };
 
+  const handleClose = () => {
+    // Reset form when closing
+    setFormData({
+      flightNumber: '',
+      destination: '',
+      departureTime: '',
+      gate: '',
+    });
+    onClose();
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
         <StyledDialog
           open={isOpen}
-          onClose={onClose}
+          onClose={handleClose}
         >
           <DialogTitle sx={{ fontWeight: 600 }}>Add New Flight</DialogTitle>
           <DialogContent>
@@ -106,7 +141,7 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
             </FormContainer>
           </DialogContent>
           <DialogActions>
-            <Button onClick={onClose} color="inherit">
+            <Button onClick={handleClose} color="inherit">
               Cancel
             </Button>
             <Button
