@@ -28,6 +28,7 @@ public class FlightStatusUpdateService : BackgroundService
                 var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<FlightHub>>();
 
                 var flights = await flightService.GetAllFlightsAsync();
+                _logger.LogInformation($"Processing {flights.Count()} flights for status updates");
                 var statusChanges = new List<object>();
 
                 foreach (var flight in flights)
@@ -38,22 +39,31 @@ public class FlightStatusUpdateService : BackgroundService
                     if (oldStatus != flight.Status)
                     {
                         // Update the flight in the repository to save the status change
-                        await flightService.UpdateFlightStatusAsync(flight.Id, flight.Status);
-                        statusChanges.Add(new
+                        var updateSuccess = await flightService.UpdateFlightStatusAsync(flight.Id, flight.Status);
+                        if (updateSuccess)
                         {
-                            Id = flight.Id,
-                            FlightNumber = flight.FlightNumber,
-                            Status = flight.Status.ToString(),
-                            UpdatedAt = flight.UpdatedAt
-                        });
+                            statusChanges.Add(new
+                            {
+                                Id = flight.Id,
+                                FlightNumber = flight.FlightNumber,
+                                Status = flight.Status.ToString(),
+                                UpdatedAt = flight.UpdatedAt
+                            });
+                            _logger.LogInformation($"Flight {flight.FlightNumber} status changed from {oldStatus} to {flight.Status}");
+                        }
                     }
                 }
 
                 // Notify clients of any status changes
                 if (statusChanges.Count > 0)
                 {
+                    _logger.LogInformation($"Sending SignalR notification for {statusChanges.Count} status changes");
                     await hubContext.Clients.Group("FlightBoard").SendAsync("FlightStatusesUpdated", statusChanges, stoppingToken);
                     _logger.LogInformation($"Updated status for {statusChanges.Count} flights.");
+                }
+                else
+                {
+                    _logger.LogInformation("No status changes detected");
                 }
 
                 // Update every 30 seconds

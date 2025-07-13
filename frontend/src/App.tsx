@@ -41,6 +41,7 @@ const AppContent = () => {
       });
 
       signalRService.onFlightStatusesUpdated((statusChanges) => {
+        console.log('SignalR: Received FlightStatusesUpdated event:', statusChanges);
         queryClient.invalidateQueries({ queryKey: ['flights'] });
       });
 
