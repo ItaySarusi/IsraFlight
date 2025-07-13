@@ -35,9 +35,9 @@ const AppContent = () => {
       if (isInitialized) return;
       isInitialized = true;
       
-      await signalRService.startConnection();
-      
+      // Set up event handlers first
       signalRService.onFlightStatusUpdated((flightId, newStatus) => {
+        console.log('Flight status updated:', flightId, newStatus);
         queryClient.invalidateQueries({ queryKey: ['flights'] });
       });
 
@@ -45,6 +45,22 @@ const AppContent = () => {
         console.log('Flight statuses updated:', statusChanges);
         queryClient.invalidateQueries({ queryKey: ['flights'] });
       });
+
+      signalRService.onFlightAdded((flight) => {
+        console.log('Flight added:', flight);
+        queryClient.invalidateQueries({ queryKey: ['flights'] });
+      });
+
+      signalRService.onFlightDeleted((flightId) => {
+        console.log('Flight deleted:', flightId);
+        queryClient.invalidateQueries({ queryKey: ['flights'] });
+      });
+
+      // Then start the connection
+      await signalRService.startConnection();
+      
+      // Join the FlightBoard group after connection is established
+      await signalRService.joinFlightBoard();
     };
 
     initializeSignalR();

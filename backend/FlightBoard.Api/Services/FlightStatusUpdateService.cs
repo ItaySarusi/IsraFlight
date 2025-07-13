@@ -52,8 +52,9 @@ public class FlightStatusUpdateService : BackgroundService
                 // Notify clients of any status changes
                 if (statusChanges.Count > 0)
                 {
+                    _logger.LogInformation($"Sending status updates for {statusChanges.Count} flights: {string.Join(", ", statusChanges.Select(s => $"{s.GetType().GetProperty("FlightNumber")?.GetValue(s)}: {s.GetType().GetProperty("Status")?.GetValue(s)}"))}");
                     await hubContext.Clients.Group("FlightBoard").SendAsync("FlightStatusesUpdated", statusChanges, stoppingToken);
-                    _logger.LogInformation($"Updated status for {statusChanges.Count} flights.");
+                    _logger.LogInformation($"Successfully sent status updates for {statusChanges.Count} flights.");
                 }
 
                 // Update every 30 seconds

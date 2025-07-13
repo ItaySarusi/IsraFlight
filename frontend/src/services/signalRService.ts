@@ -123,6 +123,24 @@ class SignalRService {
     }
   }
 
+  public onFlightAdded(callback: (flight: any) => void) {
+    if (this.connection) {
+      this.connection.on('FlightAdded', callback);
+    }
+  }
+
+  public onFlightDeleted(callback: (flightId: string) => void) {
+    if (this.connection) {
+      this.connection.on('FlightDeleted', callback);
+    }
+  }
+
+  public async joinFlightBoard() {
+    if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) {
+      await this.connection.invoke('JoinFlightBoard');
+    }
+  }
+
   public getConnectionState() {
     return this.connection?.state || signalR.HubConnectionState.Disconnected;
   }
