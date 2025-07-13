@@ -1,7 +1,8 @@
-import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Chip } from '@mui/material';
+import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Chip, TablePagination } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
+import { useState, useMemo, useEffect } from 'react';
 import { Flight, FlightStatus } from '../types/flight';
 import { LoadingSpinner } from './LoadingSpinner';
 
@@ -66,6 +67,9 @@ const getStatusColor = (status: FlightStatus) => {
 };
 
 const FlightBoard = ({ onDeleteFlight, filters }: FlightBoardProps) => {
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+
   const { data: flights = [], isLoading, error } = useQuery<Flight[]>({
     queryKey: ['flights', filters],
     queryFn: () => {
@@ -81,6 +85,35 @@ const FlightBoard = ({ onDeleteFlight, filters }: FlightBoardProps) => {
       return fetchFlights();
     },
   });
+
+  // Sort flights by departure time (newest first) and apply pagination
+  const sortedAndPaginatedFlights = useMemo(() => {
+    const sorted = [...flights].sort((a, b) => 
+      new Date(b.departureTime).getTime() - new Date(a.departureTime).getTime()
+    );
+    
+    // Only apply pagination if there are more than 5 flights
+    if (sorted.length <= 5) {
+      return sorted;
+    }
+    
+    const startIndex = page * rowsPerPage;
+    return sorted.slice(startIndex, startIndex + rowsPerPage);
+  }, [flights, page, rowsPerPage]);
+
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(0);
+  }, [filters]);
 
   if (isLoading) {
     return (
@@ -149,7 +182,7 @@ const FlightBoard = ({ onDeleteFlight, filters }: FlightBoardProps) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {flights.map((flight) => (
+            {sortedAndPaginatedFlights.map((flight) => (
               <TableRow
                 key={flight.id}
                 component={motion.tr}
@@ -186,6 +219,21 @@ const FlightBoard = ({ onDeleteFlight, filters }: FlightBoardProps) => {
           </TableBody>
         </Table>
       </TableContainer>
+      {flights.length > 5 && (
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={flights.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          sx={{
+            borderTop: '1px solid',
+            borderColor: 'divider',
+          }}
+        />
+      )}
     </Paper>
   );
 };

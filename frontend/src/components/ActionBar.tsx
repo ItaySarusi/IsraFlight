@@ -97,11 +97,7 @@ const ActionBar = ({ onAddFlight, onFilterChange }: ActionBarProps) => {
       onFilterChange({ status: '', destination: '', searchQuery: '' });
     }
   };
-  const handleSearch = () => {
-    if (onFilterChange) {
-      onFilterChange({ status, destination, searchQuery });
-    }
-  };
+
 
   const handleRetryConnection = async () => {
     setIsRetrying(true);
@@ -267,16 +263,6 @@ const ActionBar = ({ onAddFlight, onFilterChange }: ActionBarProps) => {
               startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} />, 
             }}
           />
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<SearchIcon />}
-            onClick={handleSearch}
-            fullWidth
-            sx={{ height: '40px', borderRadius: '4px' }}
-          >
-            Search
-          </Button>
           <Button
             variant="outlined"
             color="inherit"
