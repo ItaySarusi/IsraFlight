@@ -1,41 +1,29 @@
-export enum FlightStatus {
-  Scheduled = 'Scheduled',
-  Boarding = 'Boarding',
-  Departed = 'Departed',
-  Landed = 'Landed'
-}
-
 export interface Flight {
-  id: number;
+  id: string;
   flightNumber: string;
   destination: string;
   departureTime: string;
   gate: string;
   status: FlightStatus;
-  createdAt: string;
-  updatedAt: string;
 }
 
-export interface CreateFlightDto {
+export enum FlightStatus {
+  OnTime = 'On Time',
+  Delayed = 'Delayed',
+  Boarding = 'Boarding',
+  Departed = 'Departed',
+  Cancelled = 'Cancelled',
+}
+
+export interface FlightFormData {
   flightNumber: string;
   destination: string;
   departureTime: string;
   gate: string;
 }
 
-export interface UpdateFlightDto {
-  destination?: string;
-  departureTime?: string;
-  gate?: string;
-}
-
 export interface FlightFilters {
-  status?: FlightStatus;
-  destination?: string;
-  searchKeyword?: string;
-}
-
-export interface ConnectionStatus {
-  isConnected: boolean;
-  connectionId?: string;
+  status: FlightStatus | '';
+  destination: string;
+  searchQuery: string;
 } 

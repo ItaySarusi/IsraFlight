@@ -1,99 +1,121 @@
-import React, { useState, useMemo } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from '@mui/material/styles';
+import { CssBaseline, Box } from '@mui/material';
+import { theme } from './theme/theme';
 import Header from './components/Header';
-import ActionsSimple from './components/ActionsSimple';
 import FlightBoard from './components/FlightBoard';
+import ActionBar from './components/ActionBar';
+import { AnimatePresence } from 'framer-motion';
+import { Provider } from 'react-redux';
+import { store } from './store';
 import AddFlightModal from './components/AddFlightModal';
-import { useFlights } from './hooks/useFlights';
-import { Flight } from './types/flight';
+import { QueryClient, QueryClientProvider, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Flight, FlightFormData } from './types/flight';
+import { useState, useEffect } from 'react';
+import { addFlight, deleteFlight } from './services/flightService';
+import { signalRService } from './services/signalRService';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
+const queryClient = new QueryClient();
+
+// Separate component for the app content that uses React Query hooks
+const AppContent = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    signalRService.startConnection();
+    
+    signalRService.onFlightStatusUpdated((flightId, newStatus) => {
+      queryClient.invalidateQueries({ queryKey: ['flights'] });
+    });
+
+    return () => {
+      signalRService.stopConnection();
+    };
+  }, [queryClient]);
+
+  const addFlightMutation = useMutation({
+    mutationFn: addFlight,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['flights'] });
+      setIsModalOpen(false);
     },
-  },
-});
+  });
 
-const AppContent: React.FC = () => {
-  const [isAddFlightModalOpen, setIsAddFlightModalOpen] = useState(false);
-  // TODO: Fix Redux typing issue later
-  // const filters = useAppSelector((state) => state.filters.filters);
-  
-  // Use search query if filters are applied, otherwise use regular flights query
-  // const shouldUseSearch = !!(filters.status || filters.destination);
-  
-  const flightsQuery = useFlights();
-  // const searchQuery = useFlightSearch(filters.status, filters.destination);
-  
-  const activeQuery = flightsQuery; // shouldUseSearch ? searchQuery : flightsQuery;
-  
-  // Filter flights by search keyword on the client side
-  const filteredFlights = useMemo(() => {
-    if (!activeQuery.data) return [];
-    
-    let flights = activeQuery.data;
-    
-    // TODO: Add search filtering back when Redux is fixed
-    // if (filters.searchKeyword) {
-    //   const keyword = filters.searchKeyword.toLowerCase();
-    //   flights = flights.filter((flight: Flight) =>
-    //     flight.flightNumber.toLowerCase().includes(keyword) ||
-    //     flight.destination.toLowerCase().includes(keyword) ||
-    //     flight.gate.toLowerCase().includes(keyword)
-    //   );
-    // }
-    
-    return flights;
-  }, [activeQuery.data]);
-  
-  // Extract unique destinations for the dropdown
-  const destinations = useMemo(() => {
-    if (!flightsQuery.data) return [];
-    return Array.from(new Set(flightsQuery.data.map((flight: Flight) => flight.destination))).sort();
-  }, [flightsQuery.data]);
+  const deleteFlightMutation = useMutation({
+    mutationFn: deleteFlight,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['flights'] });
+    },
+  });
 
-  const handleAddFlightClick = () => {
-    setIsAddFlightModalOpen(true);
+  const handleAddFlight = () => {
+    setIsModalOpen(true);
   };
 
-  const handleCloseAddFlightModal = () => {
-    setIsAddFlightModalOpen(false);
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
   };
 
-  const handleSearch = () => {
-    // Trigger refetch of the appropriate query
-    flightsQuery.refetch();
+  const handleSubmitFlight = async (flightData: FlightFormData) => {
+    addFlightMutation.mutate(flightData);
+  };
+
+  const handleDeleteFlight = async (id: string) => {
+    deleteFlightMutation.mutate(id);
+  };
+
+  const handleFilterChange = (filters: { status: string; destination: string; searchQuery: string }) => {
+    // Update the query with the new filters
+    queryClient.setQueryData(['flights', 'filters'], filters);
+    queryClient.invalidateQueries({ queryKey: ['flights'] });
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200">
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        bgcolor: 'background.default',
+      }}
+    >
       <Header />
-      <ActionsSimple
-        onAddFlightClick={handleAddFlightClick}
-        onSearch={handleSearch}
-        destinations={destinations}
-      />
-      <FlightBoard
-        flights={filteredFlights}
-        isLoading={activeQuery.isLoading}
-        error={activeQuery.error?.message || null}
-      />
-      <AddFlightModal
-        isOpen={isAddFlightModalOpen}
-        onClose={handleCloseAddFlightModal}
-      />
-    </div>
+      <Box
+        component="main"
+        sx={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 3,
+          p: { xs: 2, sm: 3, md: 4 },
+        }}
+      >
+        <ActionBar onAddFlight={handleAddFlight} onFilterChange={handleFilterChange} />
+        <FlightBoard onDeleteFlight={handleDeleteFlight} />
+        <AddFlightModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onSubmit={handleSubmitFlight}
+          isLoading={addFlightMutation.isPending}
+        />
+      </Box>
+    </Box>
   );
 };
 
-const App: React.FC = () => {
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppContent />
+      <Provider store={store}>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <AnimatePresence>
+            <AppContent />
+          </AnimatePresence>
+        </ThemeProvider>
+      </Provider>
     </QueryClientProvider>
   );
-};
+}
 
 export default App;

@@ -1,23 +1,15 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  body {
-    @apply bg-background text-secondary;
-  }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(to bottom right, #f3f4f6, #e5e7eb);
+  min-height: 100vh;
 }
 
-@layer components {
-  .neo-button {
-    @apply px-4 py-2 rounded-lg shadow-neo 
-           hover:shadow-neo-sm active:shadow-neo-inner
-           transition-shadow duration-200 ease-in-out;
-  }
-
-  .glass-panel {
-    @apply bg-background-glass backdrop-blur-glass
-           rounded-xl border border-white/20
-           shadow-neo;
-  }
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
 }

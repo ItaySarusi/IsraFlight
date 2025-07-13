@@ -1,49 +1,32 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { FlightFilters, FlightStatus } from '../../types/flight';
 
-interface FiltersState {
-  filters: FlightFilters;
-}
-
-const initialState: FiltersState = {
-  filters: {
-    status: undefined,
-    destination: undefined,
-    searchKeyword: undefined,
-  },
+const initialState: FlightFilters = {
+  status: '',
+  destination: '',
+  searchQuery: '',
 };
 
 const filtersSlice = createSlice({
   name: 'filters',
   initialState,
   reducers: {
-    setStatusFilter: (state, action: PayloadAction<FlightStatus | undefined>) => {
-      state.filters.status = action.payload;
+    setStatusFilter: (state, action: PayloadAction<FlightStatus | ''>) => {
+      state.status = action.payload;
     },
-    setDestinationFilter: (state, action: PayloadAction<string | undefined>) => {
-      state.filters.destination = action.payload;
+    setDestinationFilter: (state, action: PayloadAction<string>) => {
+      state.destination = action.payload;
     },
-    setSearchKeyword: (state, action: PayloadAction<string | undefined>) => {
-      state.filters.searchKeyword = action.payload;
+    setSearchQuery: (state, action: PayloadAction<string>) => {
+      state.searchQuery = action.payload;
     },
     clearFilters: (state) => {
-      state.filters = {
-        status: undefined,
-        destination: undefined,
-        searchKeyword: undefined,
-      };
-    },
-    setFilters: (state, action: PayloadAction<FlightFilters>) => {
-      state.filters = action.payload;
+      state.status = '';
+      state.destination = '';
+      state.searchQuery = '';
     },
   },
 });
 
-export const {
-  setStatusFilter,
-  setDestinationFilter,
-  setSearchKeyword,
-  clearFilters,
-  setFilters,
-} = filtersSlice.actions;
+export const { setStatusFilter, setDestinationFilter, setSearchQuery, clearFilters } = filtersSlice.actions;
 export default filtersSlice.reducer; 

@@ -1,20 +1,52 @@
-import React from 'react';
+import { AppBar, Toolbar, Typography, Box, styled } from '@mui/material';
+import { motion } from 'framer-motion';
+import FlightTakeoffIcon from '@mui/icons-material/FlightTakeoff';
 
-const Header: React.FC = () => {
+const StyledAppBar = styled(AppBar)(({ theme }) => ({
+  background: 'transparent',
+  boxShadow: 'none',
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  backdropFilter: 'blur(8px)',
+  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+}));
+
+const LogoContainer = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(2),
+}));
+
+const LogoIcon = styled(FlightTakeoffIcon)(({ theme }) => ({
+  color: theme.palette.primary.main,
+  fontSize: '2rem',
+  transform: 'rotate(-45deg)',
+}));
+
+const Header = () => {
   return (
-    <header className="w-full py-8 px-6 mb-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="neo-card p-8 text-center">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-primary-600 via-blue-600 to-gray-800 bg-clip-text text-transparent animate-fade-in">
-            ISRAFLIGHT
-          </h1>
-          <p className="text-gray-600 mt-2 text-lg font-medium">
-            Real-time Flight Board Management System
-          </p>
-          <div className="mt-4 h-1 w-32 bg-gradient-to-r from-primary-500 to-blue-500 rounded-full mx-auto animate-pulse"></div>
-        </div>
-      </div>
-    </header>
+    <StyledAppBar position="sticky">
+      <Toolbar>
+        <LogoContainer>
+          <LogoIcon />
+          <Typography
+            variant="h5"
+            component={motion.h1}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            sx={{
+              fontWeight: 600,
+              background: (theme) =>
+                `-webkit-linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}
+          >
+            IsraFlight
+          </Typography>
+        </LogoContainer>
+      </Toolbar>
+    </StyledAppBar>
   );
 };
 

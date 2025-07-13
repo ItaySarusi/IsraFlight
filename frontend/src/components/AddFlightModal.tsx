@@ -1,209 +1,128 @@
-import React, { useState } from 'react';
-import { createPortal } from 'react-dom';
-import { useCreateFlight } from '../hooks/useFlights';
-import { CreateFlightDto } from '../types/flight';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
+  MenuItem,
+  styled,
+  CircularProgress,
+} from '@mui/material';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
+import { FlightFormData, FlightStatus } from '../types/flight';
 
 interface AddFlightModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSubmit: (data: FlightFormData) => void;
+  isLoading: boolean;
 }
 
-const AddFlightModal: React.FC<AddFlightModalProps> = ({ isOpen, onClose }) => {
-  const createFlight = useCreateFlight();
-  const [formData, setFormData] = useState<CreateFlightDto>({
+const StyledDialog = styled(Dialog)(({ theme }) => ({
+  '& .MuiDialog-paper': {
+    borderRadius: '24px',
+    padding: theme.spacing(2),
+    backgroundColor: theme.palette.background.paper,
+  },
+}));
+
+const FormContainer = styled('form')(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(3),
+  minWidth: '400px',
+  [theme.breakpoints.down('sm')]: {
+    minWidth: '100%',
+  },
+}));
+
+const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModalProps) => {
+  const [formData, setFormData] = useState<FlightFormData>({
     flightNumber: '',
     destination: '',
     departureTime: '',
     gate: '',
   });
-  const [errors, setErrors] = useState<Partial<CreateFlightDto>>({});
 
-  const validateForm = (): boolean => {
-    const newErrors: Partial<CreateFlightDto> = {};
-
-    if (!formData.flightNumber.trim()) {
-      newErrors.flightNumber = 'Flight number is required';
-    }
-
-    if (!formData.destination.trim()) {
-      newErrors.destination = 'Destination is required';
-    }
-
-    if (!formData.departureTime) {
-      newErrors.departureTime = 'Departure time is required';
-    } else {
-      const departureDate = new Date(formData.departureTime);
-      const now = new Date();
-      if (departureDate <= now) {
-        newErrors.departureTime = 'Departure time must be in the future';
-      }
-    }
-
-    if (!formData.gate.trim()) {
-      newErrors.gate = 'Gate is required';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-
-    try {
-      await createFlight.mutateAsync(formData);
-      handleClose();
-    } catch (error) {
-      console.error('Error creating flight:', error);
-    }
+    onSubmit(formData);
   };
 
-  const handleClose = () => {
-    setFormData({
-      flightNumber: '',
-      destination: '',
-      departureTime: '',
-      gate: '',
-    });
-    setErrors({});
-    onClose();
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
-    
-    // Clear error when user starts typing
-    if (errors[name as keyof CreateFlightDto]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: undefined,
-      }));
-    }
   };
 
-  if (!isOpen) return null;
-
-  const modalContent = (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-        onClick={handleClose}
-      />
-      
-      {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md animate-slide-in">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">Add New Flight</h2>
-            <button
-              onClick={handleClose}
-              className="text-gray-400 hover:text-gray-600 text-2xl font-bold transition-colors"
-            >
-              ×
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Flight Number
-              </label>
-              <input
-                type="text"
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <StyledDialog
+          open={isOpen}
+          onClose={onClose}
+        >
+          <DialogTitle sx={{ fontWeight: 600 }}>Add New Flight</DialogTitle>
+          <DialogContent>
+            <FormContainer onSubmit={handleSubmit}>
+              <TextField
                 name="flightNumber"
+                label="Flight Number"
                 value={formData.flightNumber}
-                onChange={handleInputChange}
-                className={`input-field w-full ${errors.flightNumber ? 'border-red-500 focus:ring-red-500' : ''}`}
-                placeholder="e.g., EL123"
+                onChange={handleChange}
+                required
+                fullWidth
               />
-              {errors.flightNumber && (
-                <p className="text-red-500 text-sm mt-1">{errors.flightNumber}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Destination
-              </label>
-              <input
-                type="text"
+              <TextField
                 name="destination"
+                label="Destination"
                 value={formData.destination}
-                onChange={handleInputChange}
-                className={`input-field w-full ${errors.destination ? 'border-red-500 focus:ring-red-500' : ''}`}
-                placeholder="e.g., New York"
+                onChange={handleChange}
+                required
+                fullWidth
               />
-              {errors.destination && (
-                <p className="text-red-500 text-sm mt-1">{errors.destination}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Departure Time
-              </label>
-              <input
-                type="datetime-local"
+              <TextField
                 name="departureTime"
+                label="Departure Time"
+                type="datetime-local"
                 value={formData.departureTime}
-                onChange={handleInputChange}
-                className={`input-field w-full ${errors.departureTime ? 'border-red-500 focus:ring-red-500' : ''}`}
+                onChange={handleChange}
+                required
+                fullWidth
+                InputLabelProps={{ shrink: true }}
               />
-              {errors.departureTime && (
-                <p className="text-red-500 text-sm mt-1">{errors.departureTime}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Gate
-              </label>
-              <input
-                type="text"
+              <TextField
                 name="gate"
+                label="Gate"
                 value={formData.gate}
-                onChange={handleInputChange}
-                className={`input-field w-full ${errors.gate ? 'border-red-500 focus:ring-red-500' : ''}`}
-                placeholder="e.g., A12"
+                onChange={handleChange}
+                required
+                fullWidth
               />
-              {errors.gate && (
-                <p className="text-red-500 text-sm mt-1">{errors.gate}</p>
-              )}
-            </div>
-
-            <div className="flex space-x-3 pt-4">
-              <button
-                type="button"
-                onClick={handleClose}
-                className="btn-secondary flex-1"
-                disabled={createFlight.isPending}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="btn-primary flex-1"
-                disabled={createFlight.isPending}
-              >
-                {createFlight.isPending ? 'Adding...' : 'Add Flight'}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+            </FormContainer>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={onClose} color="inherit">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              variant="contained"
+              color="primary"
+              disabled={isLoading}
+              startIcon={isLoading && <CircularProgress size={20} />}
+            >
+              Add Flight
+            </Button>
+          </DialogActions>
+        </StyledDialog>
+      )}
+    </AnimatePresence>
   );
-
-  return createPortal(modalContent, document.body);
 };
 
 export default AddFlightModal; 
