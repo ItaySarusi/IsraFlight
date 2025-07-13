@@ -37,7 +37,8 @@ public class FlightStatusUpdateService : BackgroundService
                     
                     if (oldStatus != flight.Status)
                     {
-                        await flightService.UpdateFlightAsync(flight.Id);
+                        // Update the flight in the repository to save the status change
+                        await flightService.UpdateFlightStatusAsync(flight.Id, flight.Status);
                         statusChanges.Add(new
                         {
                             Id = flight.Id,

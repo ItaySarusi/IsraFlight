@@ -1,4 +1,4 @@
-import { Box, Button, TextField, MenuItem, styled, Chip, Stack, IconButton, Tooltip } from '@mui/material';
+import { Box, Button, TextField, MenuItem, styled, Chip, IconButton, Tooltip } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
@@ -10,6 +10,7 @@ import { FlightStatus } from '../types/flight';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { signalRService } from '../services/signalRService';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ActionBarProps {
   onAddFlight: () => void;
@@ -75,7 +76,9 @@ const ActionBar = ({ onAddFlight, onFilterChange }: ActionBarProps) => {
   const [destination, setDestination] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isRetrying, setIsRetrying] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const isConnected = useSelector((state: RootState) => state.connection.isConnected);
+  const queryClient = useQueryClient();
 
   const handleFilterChange = (
     type: 'status' | 'destination' | 'search',
@@ -128,6 +131,23 @@ const ActionBar = ({ onAddFlight, onFilterChange }: ActionBarProps) => {
     }
   };
 
+  const handleRefreshData = async () => {
+    setIsRefreshing(true);
+    try {
+      console.log('Refreshing flight data...');
+      
+      // Invalidate and refetch all flight queries
+      await queryClient.invalidateQueries({ queryKey: ['flights'] });
+      
+      // Small delay to show the refresh animation
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } catch (error) {
+      console.error('Failed to refresh data:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   return (
     <MotionBox
       initial={{ opacity: 0, y: 20 }}
@@ -136,7 +156,44 @@ const ActionBar = ({ onAddFlight, onFilterChange }: ActionBarProps) => {
     >
       <StyledActionBar>
         <TopBar>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={onAddFlight}
+            sx={{
+              borderRadius: '8px',
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: (theme) => theme.shadows[4],
+              },
+            }}
+          >
+            Add Flight
+          </Button>
           <ConnectionStatus>
+            <Tooltip title="Refresh Flight Data">
+              <IconButton
+                size="small"
+                onClick={handleRefreshData}
+                disabled={isRefreshing}
+                sx={{
+                  color: isConnected ? 'success.main' : 'error.main',
+                  '&:hover': {
+                    backgroundColor: isConnected ? 'success.light' : 'error.light',
+                    color: 'white',
+                  },
+                }}
+              >
+                <RefreshIcon 
+                  sx={{ 
+                    fontSize: '16px',
+                    animation: isRefreshing ? 'spin 1s linear infinite' : 'none'
+                  }} 
+                />
+              </IconButton>
+            </Tooltip>
             <StatusDot isConnected={isConnected} />
             <Chip
               label={isConnected ? 'SYSTEM ONLINE' : 'CONNECTING...'}
@@ -168,22 +225,6 @@ const ActionBar = ({ onAddFlight, onFilterChange }: ActionBarProps) => {
               </Tooltip>
             )}
           </ConnectionStatus>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<AddIcon />}
-            onClick={onAddFlight}
-            sx={{
-              borderRadius: '8px',
-              transition: 'all 0.2s ease-in-out',
-              '&:hover': {
-                transform: 'translateY(-2px)',
-                boxShadow: (theme) => theme.shadows[4],
-              },
-            }}
-          >
-            Add Flight
-          </Button>
         </TopBar>
 
         <FiltersContainer>

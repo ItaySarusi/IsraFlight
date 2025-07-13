@@ -32,7 +32,7 @@ public class FlightService : IFlightService
     public async Task<Flight> CreateFlightAsync(string flightNumber, string destination, DateTime departureTime, string gate)
     {
         // Validate departure time is in the future
-        if (departureTime <= DateTime.UtcNow)
+        if (departureTime <= DateTime.Now)
         {
             throw new ArgumentException("Departure time must be in the future.");
         }
@@ -62,7 +62,7 @@ public class FlightService : IFlightService
 
         if (departureTime.HasValue)
         {
-            if (departureTime.Value <= DateTime.UtcNow)
+            if (departureTime.Value <= DateTime.Now)
             {
                 throw new ArgumentException("Departure time must be in the future.");
             }
@@ -75,6 +75,20 @@ public class FlightService : IFlightService
         }
 
         return await _flightRepository.UpdateAsync(flight);
+    }
+
+    public async Task<bool> UpdateFlightStatusAsync(int id, FlightStatus newStatus)
+    {
+        var flight = await _flightRepository.GetByIdAsync(id);
+        if (flight == null)
+        {
+            return false;
+        }
+
+        flight.Status = newStatus;
+        flight.UpdatedAt = DateTime.Now;
+        await _flightRepository.UpdateAsync(flight);
+        return true;
     }
 
     public async Task<bool> DeleteFlightAsync(int id)

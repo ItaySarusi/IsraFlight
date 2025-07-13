@@ -21,10 +21,22 @@ public class FlightRepository : IFlightRepository
             .OrderBy(f => f.DepartureTime)
             .ToListAsync();
             
-        // Update status for all flights based on current time
+        // Update status for all flights based on current time and save changes
+        var hasChanges = false;
         foreach (var flight in flights)
         {
+            var oldStatus = flight.Status;
             flight.UpdateStatus();
+            if (oldStatus != flight.Status)
+            {
+                hasChanges = true;
+            }
+        }
+        
+        // Save changes if any status was updated
+        if (hasChanges)
+        {
+            await _context.SaveChangesAsync();
         }
         
         return flights;
@@ -65,10 +77,22 @@ public class FlightRepository : IFlightRepository
             .OrderBy(f => f.DepartureTime)
             .ToListAsync();
             
-        // Update status for all flights based on current time
+        // Update status for all flights based on current time and save changes
+        var hasChanges = false;
         foreach (var flight in flights)
         {
+            var oldStatus = flight.Status;
             flight.UpdateStatus();
+            if (oldStatus != flight.Status)
+            {
+                hasChanges = true;
+            }
+        }
+        
+        // Save changes if any status was updated
+        if (hasChanges)
+        {
+            await _context.SaveChangesAsync();
         }
         
         return flights;

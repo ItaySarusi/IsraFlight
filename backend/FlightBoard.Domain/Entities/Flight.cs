@@ -15,7 +15,7 @@ public class Flight
 
     public Flight()
     {
-        var now = DateTime.UtcNow;
+        var now = DateTime.Now;
         CreatedAt = now;
         UpdatedAt = now;
     }
@@ -26,7 +26,7 @@ public class Flight
         Destination = destination;
         DepartureTime = departureTime;
         Gate = gate;
-        var now = DateTime.UtcNow;
+        var now = DateTime.Now;
         CreatedAt = now;
         UpdatedAt = now;
         Status = CalculateStatus();
@@ -34,8 +34,13 @@ public class Flight
 
     public FlightStatus CalculateStatus()
     {
-        var now = DateTime.UtcNow;
-        var timeDifference = DepartureTime - now;
+        // Ensure both times are in the same timezone (local time)
+        var now = DateTime.Now;
+        var departureTimeLocal = DepartureTime.Kind == DateTimeKind.Utc 
+            ? DepartureTime.ToLocalTime() 
+            : DepartureTime;
+        
+        var timeDifference = departureTimeLocal - now;
 
         return timeDifference.TotalMinutes switch
         {
@@ -50,6 +55,6 @@ public class Flight
     public void UpdateStatus()
     {
         Status = CalculateStatus();
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.Now; // Use local time instead of UTC
     }
 }

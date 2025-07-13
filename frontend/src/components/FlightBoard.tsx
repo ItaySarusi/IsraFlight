@@ -162,7 +162,7 @@ const FlightBoard = ({ onDeleteFlight, filters }: FlightBoardProps) => {
                 <TableCell>{flight.flightNumber}</TableCell>
                 <TableCell>{flight.destination}</TableCell>
                 <TableCell>
-                  {new Date(flight.departureTime).toLocaleTimeString()}
+                  {new Date(flight.departureTime).toLocaleDateString()} {new Date(flight.departureTime).toLocaleTimeString()}
                 </TableCell>
                 <TableCell>{flight.gate}</TableCell>
                 <TableCell>

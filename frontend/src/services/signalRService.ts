@@ -117,6 +117,12 @@ class SignalRService {
     }
   }
 
+  public onFlightStatusesUpdated(callback: (statusChanges: any[]) => void) {
+    if (this.connection) {
+      this.connection.on('FlightStatusesUpdated', callback);
+    }
+  }
+
   public getConnectionState() {
     return this.connection?.state || signalR.HubConnectionState.Disconnected;
   }
