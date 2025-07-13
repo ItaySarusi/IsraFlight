@@ -7,8 +7,9 @@ import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { FlightStatus } from '../types/flight';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store';
+import { setStatusFilter, setDestinationFilter, setSearchQuery, clearFilters } from '../store/slices/filtersSlice';
 import { signalRService } from '../services/signalRService';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -72,41 +73,34 @@ const destinations = [
 ];
 
 const ActionBar = ({ onAddFlight, onFilterChange }: ActionBarProps) => {
-  const [status, setStatus] = useState('');
-  const [destination, setDestination] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
+  const dispatch = useDispatch();
+  const status = useSelector((state: RootState) => state.filters.status);
+  const destination = useSelector((state: RootState) => state.filters.destination);
+  const searchQuery = useSelector((state: RootState) => state.filters.searchQuery);
   const [isRetrying, setIsRetrying] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const isConnected = useSelector((state: RootState) => state.connection.isConnected);
   const queryClient = useQueryClient();
 
-  const handleFilterChange = (
-    type: 'status' | 'destination' | 'search',
-    value: string
-  ) => {
-    let newFilters;
-    switch (type) {
-      case 'status':
-        setStatus(value);
-        newFilters = { status: value, destination, searchQuery };
-        break;
-      case 'destination':
-        setDestination(value);
-        newFilters = { status, destination: value, searchQuery };
-        break;
-      case 'search':
-        setSearchQuery(value);
-        newFilters = { status, destination, searchQuery: value };
-        break;
-    }
-    onFilterChange?.(newFilters);
+  const handleStatusChange = (value: string) => {
+    dispatch(setStatusFilter(value as FlightStatus | ''));
   };
-
+  const handleDestinationChange = (value: string) => {
+    dispatch(setDestinationFilter(value));
+  };
+  const handleSearchQueryChange = (value: string) => {
+    dispatch(setSearchQuery(value));
+  };
   const handleClearFilters = () => {
-    setStatus('');
-    setDestination('');
-    setSearchQuery('');
-    onFilterChange?.({ status: '', destination: '', searchQuery: '' });
+    dispatch(clearFilters());
+    if (onFilterChange) {
+      onFilterChange({ status: '', destination: '', searchQuery: '' });
+    }
+  };
+  const handleSearch = () => {
+    if (onFilterChange) {
+      onFilterChange({ status, destination, searchQuery });
+    }
   };
 
   const handleRetryConnection = async () => {
@@ -232,7 +226,7 @@ const ActionBar = ({ onAddFlight, onFilterChange }: ActionBarProps) => {
             select
             label="Status"
             value={status}
-            onChange={(e) => handleFilterChange('status', e.target.value)}
+            onChange={(e) => handleStatusChange(e.target.value)}
             fullWidth
             variant="outlined"
             size="small"
@@ -249,7 +243,7 @@ const ActionBar = ({ onAddFlight, onFilterChange }: ActionBarProps) => {
             select
             label="Destination"
             value={destination}
-            onChange={(e) => handleFilterChange('destination', e.target.value)}
+            onChange={(e) => handleDestinationChange(e.target.value)}
             fullWidth
             variant="outlined"
             size="small"
@@ -265,25 +259,31 @@ const ActionBar = ({ onAddFlight, onFilterChange }: ActionBarProps) => {
           <TextField
             label="Search Flight Number"
             value={searchQuery}
-            onChange={(e) => handleFilterChange('search', e.target.value)}
+            onChange={(e) => handleSearchQueryChange(e.target.value)}
             fullWidth
             variant="outlined"
             size="small"
             InputProps={{
-              startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} />,
+              startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} />, 
             }}
           />
-
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<SearchIcon />}
+            onClick={handleSearch}
+            fullWidth
+            sx={{ height: '40px', borderRadius: '4px' }}
+          >
+            Search
+          </Button>
           <Button
             variant="outlined"
             color="inherit"
             startIcon={<ClearIcon />}
             onClick={handleClearFilters}
             fullWidth
-            sx={{
-              height: '40px',
-              borderRadius: '4px',
-            }}
+            sx={{ height: '40px', borderRadius: '4px' }}
           >
             Clear Filters
           </Button>

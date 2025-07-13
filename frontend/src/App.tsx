@@ -6,29 +6,27 @@ import FlightBoard from './components/FlightBoard';
 import ActionBar from './components/ActionBar';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Provider } from 'react-redux';
-import { store } from './store';
+import { store, RootState } from './store';
 import AddFlightModal from './components/AddFlightModal';
 import { QueryClient, QueryClientProvider, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Flight, FlightFormData } from './types/flight';
 import { useState, useEffect } from 'react';
 import { addFlight, deleteFlight } from './services/flightService';
 import { signalRService } from './services/signalRService';
+import { useSelector } from 'react-redux';
 
 const queryClient = new QueryClient();
 
 // Separate component for the app content that uses React Query hooks
 const AppContent = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [filters, setFilters] = useState<{
-    status: string;
-    destination: string;
-    searchQuery: string;
-  }>({
-    status: '',
-    destination: '',
-    searchQuery: '',
-  });
+  const filters = useSelector((state: RootState) => state.filters);
+  const [appliedFilters, setAppliedFilters] = useState(filters);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    setAppliedFilters(filters);
+  }, [filters]);
 
   useEffect(() => {
     let isInitialized = false;
@@ -89,7 +87,7 @@ const AppContent = () => {
   };
 
   const handleFilterChange = (newFilters: { status: string; destination: string; searchQuery: string }) => {
-    setFilters(newFilters);
+    setAppliedFilters(newFilters as any); // Type assertion to FlightFilters
     queryClient.invalidateQueries({ queryKey: ['flights', newFilters] });
   };
 
@@ -114,7 +112,7 @@ const AppContent = () => {
         }}
       >
         <ActionBar onAddFlight={handleAddFlight} onFilterChange={handleFilterChange} />
-        <FlightBoard onDeleteFlight={handleDeleteFlight} filters={filters} />
+        <FlightBoard onDeleteFlight={handleDeleteFlight} filters={appliedFilters} />
         <AddFlightModal
           isOpen={isModalOpen}
           onClose={handleCloseModal}
