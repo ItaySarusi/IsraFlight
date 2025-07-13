@@ -4,7 +4,7 @@ import { theme } from './theme/theme';
 import Header from './components/Header';
 import FlightBoard from './components/FlightBoard';
 import ActionBar from './components/ActionBar';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Provider } from 'react-redux';
 import { store } from './store';
 import AddFlightModal from './components/AddFlightModal';
@@ -22,11 +22,15 @@ const AppContent = () => {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    signalRService.startConnection();
-    
-    signalRService.onFlightStatusUpdated((flightId, newStatus) => {
-      queryClient.invalidateQueries({ queryKey: ['flights'] });
-    });
+    const initializeSignalR = async () => {
+      await signalRService.startConnection();
+      
+      signalRService.onFlightStatusUpdated((flightId, newStatus) => {
+        queryClient.invalidateQueries({ queryKey: ['flights'] });
+      });
+    };
+
+    initializeSignalR();
 
     return () => {
       signalRService.stopConnection();
@@ -109,9 +113,13 @@ function App() {
       <Provider store={store}>
         <ThemeProvider theme={theme}>
           <CssBaseline />
-          <AnimatePresence>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
             <AppContent />
-          </AnimatePresence>
+          </motion.div>
         </ThemeProvider>
       </Provider>
     </QueryClientProvider>

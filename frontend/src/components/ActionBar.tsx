@@ -1,13 +1,15 @@
-import { Box, Button, TextField, MenuItem, styled, Chip, Stack } from '@mui/material';
+import { Box, Button, TextField, MenuItem, styled, Chip, Stack, IconButton, Tooltip } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { FlightStatus } from '../types/flight';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
+import { signalRService } from '../services/signalRService';
 
 interface ActionBarProps {
   onAddFlight: () => void;
@@ -72,6 +74,7 @@ const ActionBar = ({ onAddFlight, onFilterChange }: ActionBarProps) => {
   const [status, setStatus] = useState('');
   const [destination, setDestination] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isRetrying, setIsRetrying] = useState(false);
   const isConnected = useSelector((state: RootState) => state.connection.isConnected);
 
   const handleFilterChange = (
@@ -103,6 +106,28 @@ const ActionBar = ({ onAddFlight, onFilterChange }: ActionBarProps) => {
     onFilterChange?.({ status: '', destination: '', searchQuery: '' });
   };
 
+  const handleRetryConnection = async () => {
+    setIsRetrying(true);
+    try {
+      console.log('Retrying SignalR connection...');
+      
+      // Test if backend is available first
+      const isBackendAvailable = await signalRService.testConnection();
+      if (!isBackendAvailable) {
+        console.error('Backend is not available');
+        return;
+      }
+      
+      await signalRService.stopConnection();
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+      await signalRService.startConnection();
+    } catch (error) {
+      console.error('Failed to retry connection:', error);
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
   return (
     <MotionBox
       initial={{ opacity: 0, y: 20 }}
@@ -119,6 +144,29 @@ const ActionBar = ({ onAddFlight, onFilterChange }: ActionBarProps) => {
               color={isConnected ? 'success' : 'error'}
               variant="outlined"
             />
+            {!isConnected && (
+              <Tooltip title="Retry Connection">
+                <IconButton
+                  size="small"
+                  onClick={handleRetryConnection}
+                  disabled={isRetrying}
+                  sx={{
+                    color: 'error.main',
+                    '&:hover': {
+                      backgroundColor: 'error.light',
+                      color: 'white',
+                    },
+                  }}
+                >
+                  <RefreshIcon 
+                    sx={{ 
+                      fontSize: '16px',
+                      animation: isRetrying ? 'spin 1s linear infinite' : 'none'
+                    }} 
+                  />
+                </IconButton>
+              </Tooltip>
+            )}
           </ConnectionStatus>
           <Button
             variant="contained"
