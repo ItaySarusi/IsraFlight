@@ -58,11 +58,12 @@ public class FlightsController : ControllerBase
     [HttpGet("search")]
     public async Task<ActionResult<IEnumerable<FlightDto>>> SearchFlights(
         [FromQuery] FlightStatus? status = null,
-        [FromQuery] string? destination = null)
+        [FromQuery] string? destination = null,
+        [FromQuery] string? flightNumber = null)
     {
         try
         {
-            var flights = await _flightService.SearchFlightsAsync(status, destination);
+            var flights = await _flightService.SearchFlightsAsync(status, destination, flightNumber);
             var flightDtos = flights.Select(MapToDto);
             return Ok(flightDtos);
         }
@@ -169,7 +170,7 @@ public class FlightsController : ControllerBase
             Destination = flight.Destination,
             DepartureTime = flight.DepartureTime,
             Gate = flight.Gate,
-            Status = flight.Status,
+            Status = flight.Status.ToString(),
             CreatedAt = flight.CreatedAt,
             UpdatedAt = flight.UpdatedAt
         };

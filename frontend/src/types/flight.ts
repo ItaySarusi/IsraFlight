@@ -8,11 +8,10 @@ export interface Flight {
 }
 
 export enum FlightStatus {
-  OnTime = 'On Time',
-  Delayed = 'Delayed',
+  Scheduled = 'Scheduled',
   Boarding = 'Boarding',
   Departed = 'Departed',
-  Cancelled = 'Cancelled',
+  Landed = 'Landed',
 }
 
 export interface FlightFormData {

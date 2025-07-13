@@ -17,9 +17,17 @@ public class FlightRepository : IFlightRepository
 
     public async Task<IEnumerable<Flight>> GetAllAsync()
     {
-        return await _context.Flights
+        var flights = await _context.Flights
             .OrderBy(f => f.DepartureTime)
             .ToListAsync();
+            
+        // Update status for all flights based on current time
+        foreach (var flight in flights)
+        {
+            flight.UpdateStatus();
+        }
+        
+        return flights;
     }
 
     public async Task<Flight?> GetByIdAsync(int id)
@@ -34,7 +42,7 @@ public class FlightRepository : IFlightRepository
             .FirstOrDefaultAsync(f => f.FlightNumber == flightNumber);
     }
 
-    public async Task<IEnumerable<Flight>> SearchAsync(FlightStatus? status = null, string? destination = null)
+    public async Task<IEnumerable<Flight>> SearchAsync(FlightStatus? status = null, string? destination = null, string? flightNumber = null)
     {
         var query = _context.Flights.AsQueryable();
 
@@ -48,9 +56,22 @@ public class FlightRepository : IFlightRepository
             query = query.Where(f => f.Destination.Contains(destination));
         }
 
-        return await query
+        if (!string.IsNullOrWhiteSpace(flightNumber))
+        {
+            query = query.Where(f => f.FlightNumber.Contains(flightNumber));
+        }
+
+        var flights = await query
             .OrderBy(f => f.DepartureTime)
             .ToListAsync();
+            
+        // Update status for all flights based on current time
+        foreach (var flight in flights)
+        {
+            flight.UpdateStatus();
+        }
+        
+        return flights;
     }
 
     public async Task<Flight> AddAsync(Flight flight)

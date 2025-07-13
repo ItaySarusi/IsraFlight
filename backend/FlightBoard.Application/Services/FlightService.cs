@@ -24,9 +24,9 @@ public class FlightService : IFlightService
         return await _flightRepository.GetByIdAsync(id);
     }
 
-    public async Task<IEnumerable<Flight>> SearchFlightsAsync(FlightStatus? status = null, string? destination = null)
+    public async Task<IEnumerable<Flight>> SearchFlightsAsync(FlightStatus? status = null, string? destination = null, string? flightNumber = null)
     {
-        return await _flightRepository.SearchAsync(status, destination);
+        return await _flightRepository.SearchAsync(status, destination, flightNumber);
     }
 
     public async Task<Flight> CreateFlightAsync(string flightNumber, string destination, DateTime departureTime, string gate)

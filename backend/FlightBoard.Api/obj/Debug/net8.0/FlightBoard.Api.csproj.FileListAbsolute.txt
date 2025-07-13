@@ -248,3 +248,4 @@
 /Users/itays/Desktop/IsraFlight/backend/FlightBoard.Api/obj/Debug/net8.0/FlightBoard.Api.pdb
 /Users/itays/Desktop/IsraFlight/backend/FlightBoard.Api/obj/Debug/net8.0/FlightBoard.Api.genruntimeconfig.cache
 /Users/itays/Desktop/IsraFlight/backend/FlightBoard.Api/obj/Debug/net8.0/ref/FlightBoard.Api.dll
+/Users/itays/Desktop/IsraFlight/backend/FlightBoard.Api/obj/Debug/net8.0/FlightBoard.Api.sourcelink.json

@@ -9,7 +9,7 @@ public class FlightDto
     public string Destination { get; set; } = string.Empty;
     public DateTime DepartureTime { get; set; }
     public string Gate { get; set; } = string.Empty;
-    public FlightStatus Status { get; set; }
+    public string Status { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

@@ -32,3 +32,4 @@
 /Users/itays/Desktop/IsraFlight/backend/FlightBoard.Domain/obj/Debug/net8.0/refint/FlightBoard.Domain.dll
 /Users/itays/Desktop/IsraFlight/backend/FlightBoard.Domain/obj/Debug/net8.0/FlightBoard.Domain.pdb
 /Users/itays/Desktop/IsraFlight/backend/FlightBoard.Domain/obj/Debug/net8.0/ref/FlightBoard.Domain.dll
+/Users/itays/Desktop/IsraFlight/backend/FlightBoard.Domain/obj/Debug/net8.0/FlightBoard.Domain.sourcelink.json

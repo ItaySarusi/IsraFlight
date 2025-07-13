@@ -19,10 +19,24 @@ const queryClient = new QueryClient();
 // Separate component for the app content that uses React Query hooks
 const AppContent = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [filters, setFilters] = useState<{
+    status: string;
+    destination: string;
+    searchQuery: string;
+  }>({
+    status: '',
+    destination: '',
+    searchQuery: '',
+  });
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    let isInitialized = false;
+    
     const initializeSignalR = async () => {
+      if (isInitialized) return;
+      isInitialized = true;
+      
       await signalRService.startConnection();
       
       signalRService.onFlightStatusUpdated((flightId, newStatus) => {
@@ -33,7 +47,8 @@ const AppContent = () => {
     initializeSignalR();
 
     return () => {
-      signalRService.stopConnection();
+      // Don't stop connection on unmount to avoid issues with React Strict Mode
+      // The connection will be managed by the service itself
     };
   }, [queryClient]);
 
@@ -68,10 +83,9 @@ const AppContent = () => {
     deleteFlightMutation.mutate(id);
   };
 
-  const handleFilterChange = (filters: { status: string; destination: string; searchQuery: string }) => {
-    // Update the query with the new filters
-    queryClient.setQueryData(['flights', 'filters'], filters);
-    queryClient.invalidateQueries({ queryKey: ['flights'] });
+  const handleFilterChange = (newFilters: { status: string; destination: string; searchQuery: string }) => {
+    setFilters(newFilters);
+    queryClient.invalidateQueries({ queryKey: ['flights', newFilters] });
   };
 
   return (
@@ -95,7 +109,7 @@ const AppContent = () => {
         }}
       >
         <ActionBar onAddFlight={handleAddFlight} onFilterChange={handleFilterChange} />
-        <FlightBoard onDeleteFlight={handleDeleteFlight} />
+        <FlightBoard onDeleteFlight={handleDeleteFlight} filters={filters} />
         <AddFlightModal
           isOpen={isModalOpen}
           onClose={handleCloseModal}

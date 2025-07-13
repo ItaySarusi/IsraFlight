@@ -44,3 +44,4 @@
 /Users/itays/Desktop/IsraFlight/backend/FlightBoard.Application/obj/Debug/net8.0/refint/FlightBoard.Application.dll
 /Users/itays/Desktop/IsraFlight/backend/FlightBoard.Application/obj/Debug/net8.0/FlightBoard.Application.pdb
 /Users/itays/Desktop/IsraFlight/backend/FlightBoard.Application/obj/Debug/net8.0/ref/FlightBoard.Application.dll
+/Users/itays/Desktop/IsraFlight/backend/FlightBoard.Application/obj/Debug/net8.0/FlightBoard.Application.sourcelink.json

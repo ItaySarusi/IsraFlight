@@ -3,32 +3,83 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Flight, FlightStatus } from '../types/flight';
-import { fetchFlights } from '../services/flightService';
 import { LoadingSpinner } from './LoadingSpinner';
+
+const API_URL = 'http://localhost:5001/api';
+
+const fetchFlights = async (): Promise<Flight[]> => {
+  const response = await fetch(`${API_URL}/flights`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch flights');
+  }
+  return response.json();
+};
+
+const searchFlights = async (filters: {
+  status?: string;
+  destination?: string;
+  flightNumber?: string;
+}): Promise<Flight[]> => {
+  const params = new URLSearchParams();
+  
+  if (filters.status) {
+    params.append('status', filters.status);
+  }
+  if (filters.destination) {
+    params.append('destination', filters.destination);
+  }
+  if (filters.flightNumber) {
+    params.append('flightNumber', filters.flightNumber);
+  }
+  
+  const url = `${API_URL}/flights/search${params.toString() ? `?${params.toString()}` : ''}`;
+  const response = await fetch(url);
+  
+  if (!response.ok) {
+    throw new Error('Failed to search flights');
+  }
+  return response.json();
+};
 
 interface FlightBoardProps {
   onDeleteFlight: (id: string) => Promise<void>;
+  filters: {
+    status: string;
+    destination: string;
+    searchQuery: string;
+  };
 }
 
 const getStatusColor = (status: FlightStatus) => {
   switch (status) {
-    case FlightStatus.OnTime:
-      return 'success';
-    case FlightStatus.Delayed:
-      return 'error';
+    case FlightStatus.Scheduled:
+      return 'default';
     case FlightStatus.Boarding:
       return 'warning';
     case FlightStatus.Departed:
       return 'info';
+    case FlightStatus.Landed:
+      return 'success';
     default:
       return 'default';
   }
 };
 
-const FlightBoard = ({ onDeleteFlight }: FlightBoardProps) => {
+const FlightBoard = ({ onDeleteFlight, filters }: FlightBoardProps) => {
   const { data: flights = [], isLoading, error } = useQuery<Flight[]>({
-    queryKey: ['flights'],
-    queryFn: fetchFlights,
+    queryKey: ['flights', filters],
+    queryFn: () => {
+      // If any filter is applied, use search endpoint
+      if (filters.status || filters.destination || filters.searchQuery) {
+        return searchFlights({
+          status: filters.status || undefined,
+          destination: filters.destination || undefined,
+          flightNumber: filters.searchQuery || undefined,
+        });
+      }
+      // Otherwise, fetch all flights
+      return fetchFlights();
+    },
   });
 
   if (isLoading) {

@@ -57,7 +57,7 @@ const StatusDot = styled(FiberManualRecordIcon, {
   animation: isConnected ? 'none' : 'pulse 2s infinite',
 }));
 
-const MotionBox = motion(Box);
+const MotionBox = motion.create(Box);
 
 const destinations = [
   'Tel Aviv',

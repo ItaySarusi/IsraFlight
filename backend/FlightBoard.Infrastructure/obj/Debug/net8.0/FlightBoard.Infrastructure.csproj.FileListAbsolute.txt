@@ -56,3 +56,4 @@
 /Users/itays/Desktop/IsraFlight/backend/FlightBoard.Infrastructure/obj/Debug/net8.0/FlightBoard.Infrastructure.pdb
 /Users/itays/Desktop/IsraFlight/backend/FlightBoard.Infrastructure/obj/Debug/net8.0/FlightBoard.Infrastructure.genruntimeconfig.cache
 /Users/itays/Desktop/IsraFlight/backend/FlightBoard.Infrastructure/obj/Debug/net8.0/ref/FlightBoard.Infrastructure.dll
+/Users/itays/Desktop/IsraFlight/backend/FlightBoard.Infrastructure/obj/Debug/net8.0/FlightBoard.Infrastructure.sourcelink.json

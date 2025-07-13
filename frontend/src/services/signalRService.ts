@@ -5,17 +5,29 @@ import { setConnectionStatus } from '../store/slices/connectionSlice';
 class SignalRService {
   private connection: signalR.HubConnection | null = null;
   private isConnecting = false;
+  protected static instance: SignalRService | null = null;
+
+  public static getInstance(): SignalRService {
+    if (!SignalRService.instance) {
+      SignalRService.instance = new SignalRService();
+    }
+    return SignalRService.instance;
+  }
 
   constructor() {
+    if (SignalRService.instance) {
+      return SignalRService.instance;
+    }
+    SignalRService.instance = this;
     this.initializeConnection();
   }
 
   private initializeConnection() {
     console.log('SignalR: Initializing connection...');
     this.connection = new signalR.HubConnectionBuilder()
-      .withUrl('http://localhost:5000/flightHub')
+      .withUrl('http://localhost:5001/flightHub')
       .withAutomaticReconnect([0, 2000, 10000, 30000])
-      .configureLogging(signalR.LogLevel.Debug)
+      .configureLogging(signalR.LogLevel.Information) // Reduce logging noise
       .build();
 
     this.connection.onreconnecting(() => {
@@ -49,12 +61,20 @@ class SignalRService {
       return;
     }
 
+    if (this.connection!.state === signalR.HubConnectionState.Connecting) {
+      console.log('SignalR: Already in connecting state, skipping...');
+      return;
+    }
+
     try {
       this.isConnecting = true;
       console.log('SignalR: Starting connection...');
       
+      // Add a small delay to prevent race conditions
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // Check if backend is available first
-      const response = await fetch('http://localhost:5000/flightHub/negotiate', {
+      const response = await fetch('http://localhost:5001/flightHub/negotiate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -103,7 +123,7 @@ class SignalRService {
 
   public async testConnection() {
     try {
-      const response = await fetch('http://localhost:5000/flightHub/negotiate', {
+      const response = await fetch('http://localhost:5001/flightHub/negotiate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -125,4 +145,4 @@ class SignalRService {
   }
 }
 
-export const signalRService = new SignalRService(); 
+export const signalRService = SignalRService.getInstance(); 
