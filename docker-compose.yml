@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  # Backend API
+  flightboard-api:
+    build:
+      context: ./backend
+      dockerfile: ../Dockerfile
+    ports:
+      - "5001:5001"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5001
+    volumes:
+      - ./backend/logs:/app/logs
+      - flightboard-data:/app/data
+    networks:
+      - flightboard-network
+
+  # Frontend (if you want to containerize it too)
+  flightboard-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:5001
+      - REACT_APP_SIGNALR_URL=http://localhost:5001
+    depends_on:
+      - flightboard-api
+    networks:
+      - flightboard-network
+
+volumes:
+  flightboard-data:
+    driver: local
+
+networks:
+  flightboard-network:
+    driver: bridge
