@@ -37,22 +37,18 @@ const AppContent = () => {
       
       // Set up event handlers first
       signalRService.onFlightStatusUpdated((flightId, newStatus) => {
-        console.log('Flight status updated:', flightId, newStatus);
         queryClient.invalidateQueries({ queryKey: ['flights'] });
       });
 
       signalRService.onFlightStatusesUpdated((statusChanges) => {
-        console.log('Flight statuses updated:', statusChanges);
         queryClient.invalidateQueries({ queryKey: ['flights'] });
       });
 
       signalRService.onFlightAdded((flight) => {
-        console.log('Flight added:', flight);
         queryClient.invalidateQueries({ queryKey: ['flights'] });
       });
 
       signalRService.onFlightDeleted((flightId) => {
-        console.log('Flight deleted:', flightId);
         queryClient.invalidateQueries({ queryKey: ['flights'] });
       });
 
