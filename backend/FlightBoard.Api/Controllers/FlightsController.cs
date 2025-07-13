@@ -5,6 +5,7 @@ using FlightBoard.Api.Models;
 using FlightBoard.Api.Hubs;
 using FlightBoard.Domain.Entities;
 using FlightBoard.Domain.Enums;
+using Serilog;
 
 namespace FlightBoard.Api.Controllers;
 
@@ -78,10 +79,8 @@ public class FlightsController : ControllerBase
     {
         try
         {
-            if (!IsValidCreateFlightDto(createFlightDto))
-            {
-                return BadRequest("All fields are required: Flight Number, Destination, Departure Time, and Gate.");
-            }
+            Log.Information("Creating new flight: {FlightNumber} to {Destination}", 
+                createFlightDto.FlightNumber, createFlightDto.Destination);
 
             var flight = await _flightService.CreateFlightAsync(
                 createFlightDto.FlightNumber,
@@ -91,6 +90,9 @@ public class FlightsController : ControllerBase
 
             var flightDto = MapToDto(flight);
 
+            Log.Information("Flight created successfully: {FlightId} - {FlightNumber}", 
+                flight.Id, flight.FlightNumber);
+
             // Notify all clients about the new flight
             await _hubContext.Clients.Group("FlightBoard").SendAsync("FlightAdded", flightDto);
 
@@ -98,10 +100,13 @@ public class FlightsController : ControllerBase
         }
         catch (ArgumentException ex)
         {
+            Log.Warning("Failed to create flight: {FlightNumber} - {Error}", 
+                createFlightDto.FlightNumber, ex.Message);
             return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {
+            Log.Error(ex, "Unexpected error creating flight: {FlightNumber}", createFlightDto.FlightNumber);
             return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }
@@ -144,11 +149,16 @@ public class FlightsController : ControllerBase
     {
         try
         {
+            Log.Information("Deleting flight with ID: {FlightId}", id);
+
             var success = await _flightService.DeleteFlightAsync(id);
             if (!success)
             {
+                Log.Warning("Flight not found for deletion: {FlightId}", id);
                 return NotFound($"Flight with ID {id} not found.");
             }
+
+            Log.Information("Flight deleted successfully: {FlightId}", id);
 
             // Notify all clients about the deleted flight
             await _hubContext.Clients.Group("FlightBoard").SendAsync("FlightDeleted", id);
@@ -157,6 +167,7 @@ public class FlightsController : ControllerBase
         }
         catch (Exception ex)
         {
+            Log.Error(ex, "Unexpected error deleting flight: {FlightId}", id);
             return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }
@@ -176,11 +187,5 @@ public class FlightsController : ControllerBase
         };
     }
 
-    private static bool IsValidCreateFlightDto(CreateFlightDto dto)
-    {
-        return !string.IsNullOrWhiteSpace(dto.FlightNumber) &&
-               !string.IsNullOrWhiteSpace(dto.Destination) &&
-               !string.IsNullOrWhiteSpace(dto.Gate) &&
-               dto.DepartureTime > DateTime.MinValue;
-    }
+
 }
