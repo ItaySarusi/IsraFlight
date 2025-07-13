@@ -6,11 +6,25 @@ using FlightBoard.Application.Interfaces;
 using FlightBoard.Domain.Interfaces;
 using FlightBoard.Api.Hubs;
 using FlightBoard.Api.Services;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using Serilog;
+using FlightBoard.Api.Validators;
+
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File("logs/flightboard-.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Use Serilog
+builder.Host.UseSerilog();
+
 // Add services to the container.
 builder.Services.AddControllers();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateFlightDtoValidator>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
