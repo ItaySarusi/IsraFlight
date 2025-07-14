@@ -236,24 +236,19 @@ const ActionBar = ({ onAddFlight, onFilterChange }: ActionBarProps) => {
           </TextField>
 
           <TextField
-            select
-            label="Destination"
+            label="Search By Destination"
             value={destination}
             onChange={(e) => handleDestinationChange(e.target.value)}
             fullWidth
             variant="outlined"
             size="small"
-          >
-            <MenuItem value="">All Destinations</MenuItem>
-            {destinations.map((dest) => (
-              <MenuItem key={dest} value={dest}>
-                {dest}
-              </MenuItem>
-            ))}
-          </TextField>
+            InputProps={{
+              startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} />, 
+            }}
+          />
 
           <TextField
-            label="Search Flight Number"
+            label="Search By Flight Number"
             value={searchQuery}
             onChange={(e) => handleSearchQueryChange(e.target.value)}
             fullWidth

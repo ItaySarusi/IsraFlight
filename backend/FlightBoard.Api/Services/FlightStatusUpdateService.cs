@@ -28,7 +28,6 @@ public class FlightStatusUpdateService : BackgroundService
                 var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<FlightHub>>();
 
                 var flights = await flightService.GetAllFlightsAsync();
-                _logger.LogInformation($"Processing {flights.Count()} flights for status updates");
                 var statusChanges = new List<object>();
 
                 foreach (var flight in flights)
@@ -49,7 +48,7 @@ public class FlightStatusUpdateService : BackgroundService
                                 Status = flight.Status.ToString(),
                                 UpdatedAt = flight.UpdatedAt
                             });
-                            _logger.LogInformation($"Flight {flight.FlightNumber} status changed from {oldStatus} to {flight.Status}");
+                            _logger.LogInformation($"[StatusChanged] Flight {flight.FlightNumber} status changed in DB: {oldStatus} -> {flight.Status} at {DateTime.Now}");
                         }
                     }
                 }
@@ -57,17 +56,13 @@ public class FlightStatusUpdateService : BackgroundService
                 // Notify clients of any status changes
                 if (statusChanges.Count > 0)
                 {
-                    _logger.LogInformation($"Sending SignalR notification for {statusChanges.Count} status changes");
+                    _logger.LogInformation($"[SignalR] Sending FlightStatusesUpdated to frontend for {statusChanges.Count} flights at {DateTime.Now}");
                     await hubContext.Clients.Group("FlightBoard").SendAsync("FlightStatusesUpdated", statusChanges, stoppingToken);
-                    _logger.LogInformation($"Updated status for {statusChanges.Count} flights.");
-                }
-                else
-                {
-                    _logger.LogInformation("No status changes detected");
+                    _logger.LogInformation($"[SignalR] FlightStatusesUpdated event sent to frontend.");
                 }
 
                 // Update every 30 seconds
-                await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
             }
             catch (Exception ex)
             {

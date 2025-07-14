@@ -10,7 +10,7 @@ import { store, RootState } from './store';
 import AddFlightModal from './components/AddFlightModal';
 import { QueryClient, QueryClientProvider, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Flight, FlightFormData } from './types/flight';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { addFlight, deleteFlight } from './services/flightService';
 import { signalRService } from './services/signalRService';
 import { useSelector } from 'react-redux';
@@ -23,6 +23,7 @@ const AppContent = () => {
   const filters = useSelector((state: RootState) => state.filters);
   const [appliedFilters, setAppliedFilters] = useState(filters);
   const queryClient = useQueryClient();
+  const handlersRegistered = useRef(false);
 
   useEffect(() => {
     setAppliedFilters(filters);
@@ -35,29 +36,28 @@ const AppContent = () => {
       if (isInitialized) return;
       isInitialized = true;
       
-      // Set up event handlers first
-      signalRService.onFlightStatusUpdated((flightId, newStatus) => {
-        queryClient.invalidateQueries({ queryKey: ['flights'] });
-      });
-
-      signalRService.onFlightStatusesUpdated((statusChanges) => {
-        console.log('SignalR: Received FlightStatusesUpdated event:', statusChanges);
-        queryClient.invalidateQueries({ queryKey: ['flights'] });
-      });
-
-      signalRService.onFlightAdded((flight) => {
-        queryClient.invalidateQueries({ queryKey: ['flights'] });
-      });
-
-      signalRService.onFlightDeleted((flightId) => {
-        queryClient.invalidateQueries({ queryKey: ['flights'] });
-      });
-
-      // Then start the connection
       await signalRService.startConnection();
-      
-      // Join the FlightBoard group after connection is established
       await signalRService.joinFlightBoard();
+
+      if (!handlersRegistered.current) {
+        signalRService.onFlightStatusUpdated((flightId, newStatus) => {
+          queryClient.refetchQueries({ queryKey: ['flights'] });
+        });
+
+        signalRService.onFlightStatusesUpdated((statusChanges) => {
+          console.log('SignalR: Received FlightStatusesUpdated event:', statusChanges);
+          queryClient.refetchQueries({ queryKey: ['flights'] });
+        });
+
+        signalRService.onFlightAdded((flight) => {
+          queryClient.refetchQueries({ queryKey: ['flights'] });
+        });
+
+        signalRService.onFlightDeleted((flightId) => {
+          queryClient.refetchQueries({ queryKey: ['flights'] });
+        });
+        handlersRegistered.current = true;
+      }
     };
 
     initializeSignalR();

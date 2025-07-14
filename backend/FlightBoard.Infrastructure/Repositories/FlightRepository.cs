@@ -17,29 +17,9 @@ public class FlightRepository : IFlightRepository
 
     public async Task<IEnumerable<Flight>> GetAllAsync()
     {
-        var flights = await _context.Flights
+        return await _context.Flights
             .OrderBy(f => f.DepartureTime)
             .ToListAsync();
-            
-        // Update status for all flights based on current time and save changes
-        var hasChanges = false;
-        foreach (var flight in flights)
-        {
-            var oldStatus = flight.Status;
-            flight.UpdateStatus();
-            if (oldStatus != flight.Status)
-            {
-                hasChanges = true;
-            }
-        }
-        
-        // Save changes if any status was updated
-        if (hasChanges)
-        {
-            await _context.SaveChangesAsync();
-        }
-        
-        return flights;
     }
 
     public async Task<Flight?> GetByIdAsync(int id)
@@ -65,37 +45,17 @@ public class FlightRepository : IFlightRepository
 
         if (!string.IsNullOrWhiteSpace(destination))
         {
-            query = query.Where(f => f.Destination.Contains(destination));
+            query = query.Where(f => EF.Functions.Like(f.Destination, "%" + destination + "%"));
         }
 
         if (!string.IsNullOrWhiteSpace(flightNumber))
         {
-            query = query.Where(f => f.FlightNumber.Contains(flightNumber));
+            query = query.Where(f => EF.Functions.Like(f.FlightNumber, "%" + flightNumber + "%"));
         }
 
-        var flights = await query
+        return await query
             .OrderBy(f => f.DepartureTime)
             .ToListAsync();
-            
-        // Update status for all flights based on current time and save changes
-        var hasChanges = false;
-        foreach (var flight in flights)
-        {
-            var oldStatus = flight.Status;
-            flight.UpdateStatus();
-            if (oldStatus != flight.Status)
-            {
-                hasChanges = true;
-            }
-        }
-        
-        // Save changes if any status was updated
-        if (hasChanges)
-        {
-            await _context.SaveChangesAsync();
-        }
-        
-        return flights;
     }
 
     public async Task<Flight> AddAsync(Flight flight)

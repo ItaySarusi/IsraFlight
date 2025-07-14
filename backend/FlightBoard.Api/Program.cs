@@ -10,9 +10,13 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Serilog;
 using FlightBoard.Api.Validators;
+using Microsoft.Extensions.Logging;
 
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Error)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", Serilog.Events.LogEventLevel.Error)
     .WriteTo.Console()
     .WriteTo.File("logs/flightboard-.txt", rollingInterval: RollingInterval.Day)
     .CreateLogger();
@@ -21,6 +25,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Use Serilog
 builder.Host.UseSerilog();
+
+// Add this after builder is created, before app is built
+builder.Logging.AddFilter("Microsoft", LogLevel.Warning);
+builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Error);
 
 // Add services to the container.
 builder.Services.AddControllers();
