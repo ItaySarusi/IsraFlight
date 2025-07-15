@@ -296,3 +296,107 @@ This project is licensed under the MIT License.
 - [ ] User authentication and authorization
 - [ ] Flight scheduling and recurring flights
 - [ ] Email notifications for status changes
+
+# IsraFlight Project Overview
+
+## Key Architecture and Where to Find Each Feature
+
+### 1. ASP.NET Core Web API
+
+- **Project Root:** `backend/FlightBoard.Api/`
+- **Main Setup:**
+  - `Program.cs` (lines 1–84): Configures the web server, services, and middleware for the API.
+  - `Controllers/FlightsController.cs`: Defines the REST API endpoints for managing flights (GET, POST, DELETE, SEARCH).
+    - Example: `[HttpGet]` and `[HttpPost]` methods expose `/api/flights` endpoints.
+
+### 2. EF Core with SQLite
+
+- **Database Setup:**
+  - `Program.cs` (lines ~30–40):
+    ```csharp
+    builder.Services.AddDbContext<FlightDbContext>(options =>
+        options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")
+            ?? "Data Source=flights.db"));
+    ```
+    This configures Entity Framework Core to use SQLite as the database provider.
+  - `Infrastructure/Data/FlightDbContext.cs`: Defines the EF Core context and the `Flights` table.
+  - `Domain/Entities/Flight.cs`: Defines the `Flight` entity (the table structure).
+- **Where are the records?**
+  - The actual SQLite database file is at `backend/FlightBoard.Api/flights.db`.
+  - You can open this file with [DB Browser for SQLite](https://sqlitebrowser.org/dl/) to view and edit records.
+
+### 3. SignalR Implementation
+
+- **Backend:**
+  - `Hubs/FlightHub.cs`: Defines the SignalR hub, group join/leave, and connection logic.
+    - `OnConnectedAsync`, `JoinFlightBoard`, etc.
+  - `Services/FlightStatusUpdateService.cs`: Uses `IHubContext<FlightHub>` to send real-time updates to clients when flight statuses change.
+    - Look for `SendAsync("FlightStatusesUpdated", ...)` calls.
+  - `Controllers/FlightsController.cs`: Sends SignalR events for flight add/delete.
+    - Look for `SendAsync("FlightAdded", ...)` and `SendAsync("FlightDeleted", ...)`.
+- **Frontend:**
+  - `frontend/src/services/signalRService.ts`: Sets up the SignalR client, connection, and event handlers.
+  - `frontend/src/App.tsx`: Registers event handlers and triggers table updates on SignalR events.
+
+### 4. xUnit Testing Implementation
+
+- **Test Project:**
+  - Typically found in `backend/FlightBoard.Tests/` (or similar).
+  - Test files like `FlightServiceTests.cs`, `FlightStatusCalculationTests.cs`.
+- **xUnit Usage:**
+  - At the top of test files: `using Xunit;`
+  - Test methods are decorated with `[Fact]` or `[Theory]` attributes.
+  - Mocks are created with the Moq library: `using Moq;`
+
+---
+
+## What is Unit Testing? What is xUnit?
+
+### What is Unit Testing?
+
+- **Unit testing** is a way to automatically check that small pieces of your code (called "units"—usually functions or methods) work as expected.
+- You write code (tests) that calls your functions with different inputs and checks that the outputs are correct.
+- If you change your code later, you can run the tests again to make sure nothing broke.
+
+### What is xUnit?
+
+- **xUnit** is a popular testing framework for .NET (C#) projects.
+- It lets you write test methods using attributes like `[Fact]` (for a single test) or `[Theory]` (for parameterized tests).
+- xUnit runs your tests and reports which ones pass or fail.
+
+### How Do I Use xUnit in This Project?
+
+1. **Find the test project:**
+   - Usually in `backend/FlightBoard.Tests/`.
+2. **Write a test:**
+   - Create a class (e.g., `FlightServiceTests.cs`).
+   - Add methods with the `[Fact]` attribute:
+     ```csharp
+     [Fact]
+     public void CalculateStatus_Boarding_ReturnsBoarding()
+     {
+         // Arrange
+         var flight = new Flight(...);
+         // Act
+         var status = flight.CalculateStatus();
+         // Assert
+         Assert.Equal(FlightStatus.Boarding, status);
+     }
+     ```
+3. **Run the tests:**
+   - In Visual Studio: Right-click the test project and choose "Run Tests".
+   - Or, in the terminal:
+     ```sh
+     dotnet test backend/FlightBoard.Tests/
+     ```
+   - xUnit will show which tests passed and which failed.
+
+### Why Use Unit Tests?
+
+- They help you catch bugs early.
+- They make it safe to refactor or improve your code.
+- They prove your code works as expected.
+
+---
+
+If you want to see a specific example or run a test together, let me know!

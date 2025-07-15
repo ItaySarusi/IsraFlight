@@ -46,7 +46,14 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
     gate: '',
   });
 
-  // Reset form when modal opens/closes
+  const [errors, setErrors] = useState({
+    flightNumber: '',
+    destination: '',
+    departureTime: '',
+    gate: '',
+  });
+
+  // Reset form and errors when modal opens/closes
   useEffect(() => {
     if (isOpen) {
       setFormData({
@@ -55,10 +62,16 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
         departureTime: '',
         gate: '',
       });
+      setErrors({
+        flightNumber: '',
+        destination: '',
+        departureTime: '',
+        gate: '',
+      });
     }
   }, [isOpen]);
 
-  // Reset form when flight is successfully added (when loading changes from true to false)
+  // Reset form and errors when flight is successfully added
   useEffect(() => {
     if (!isLoading && isOpen) {
       setFormData({
@@ -67,11 +80,52 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
         departureTime: '',
         gate: '',
       });
+      setErrors({
+        flightNumber: '',
+        destination: '',
+        departureTime: '',
+        gate: '',
+      });
     }
   }, [isLoading, isOpen]);
 
+  const validate = (name: string, value: string) => {
+    switch (name) {
+      case 'flightNumber':
+        if (value.length > 10) return 'Max 10 characters';
+        if (!value) return 'Required';
+        return '';
+      case 'destination':
+        if (value.length > 20) return 'Max 20 characters';
+        if (!value) return 'Required';
+        return '';
+      case 'departureTime':
+        if (!value) return 'Required';
+        const now = new Date();
+        const dep = new Date(value);
+        if (dep <= now) return 'Departure time must be in the future';
+        return '';
+      case 'gate':
+        if (value.length > 10) return 'Max 10 characters';
+        if (!value) return 'Required';
+        return '';
+      default:
+        return '';
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Validate all fields
+    const newErrors = {
+      flightNumber: validate('flightNumber', formData.flightNumber),
+      destination: validate('destination', formData.destination),
+      departureTime: validate('departureTime', formData.departureTime),
+      gate: validate('gate', formData.gate),
+    };
+    setErrors(newErrors);
+    const hasError = Object.values(newErrors).some((err) => err);
+    if (hasError) return;
     onSubmit(formData);
   };
 
@@ -81,11 +135,20 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
       ...prev,
       [name]: value,
     }));
+    setErrors((prev) => ({
+      ...prev,
+      [name]: validate(name, value),
+    }));
   };
 
   const handleClose = () => {
-    // Reset form when closing
     setFormData({
+      flightNumber: '',
+      destination: '',
+      departureTime: '',
+      gate: '',
+    });
+    setErrors({
       flightNumber: '',
       destination: '',
       departureTime: '',
@@ -93,6 +156,12 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
     });
     onClose();
   };
+
+  const isFormInvalid = Object.values(errors).some((err) => err) ||
+    !formData.flightNumber ||
+    !formData.destination ||
+    !formData.departureTime ||
+    !formData.gate;
 
   return (
     <AnimatePresence>
@@ -111,6 +180,9 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
                 onChange={handleChange}
                 required
                 fullWidth
+                error={!!errors.flightNumber}
+                helperText={errors.flightNumber}
+                inputProps={{ maxLength: 10 }}
               />
               <TextField
                 name="destination"
@@ -119,6 +191,9 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
                 onChange={handleChange}
                 required
                 fullWidth
+                error={!!errors.destination}
+                helperText={errors.destination}
+                inputProps={{ maxLength: 20 }}
               />
               <TextField
                 name="departureTime"
@@ -129,6 +204,8 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
                 required
                 fullWidth
                 InputLabelProps={{ shrink: true }}
+                error={!!errors.departureTime}
+                helperText={errors.departureTime}
               />
               <TextField
                 name="gate"
@@ -137,6 +214,9 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
                 onChange={handleChange}
                 required
                 fullWidth
+                error={!!errors.gate}
+                helperText={errors.gate}
+                inputProps={{ maxLength: 10 }}
               />
             </FormContainer>
           </DialogContent>
@@ -148,7 +228,7 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
               onClick={handleSubmit}
               variant="contained"
               color="primary"
-              disabled={isLoading}
+              disabled={isLoading || isFormInvalid}
               startIcon={isLoading && <CircularProgress size={20} />}
             >
               Add Flight

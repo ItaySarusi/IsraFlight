@@ -5,11 +5,11 @@ import ClearIcon from '@mui/icons-material/Clear';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FlightStatus } from '../types/flight';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { RootState } from '../store';
-import { setStatusFilter, setDestinationFilter, setSearchQuery, clearFilters } from '../store/slices/filtersSlice';
+import { clearFilters } from '../store/slices/filtersSlice';
 import { signalRService } from '../services/signalRService';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -61,42 +61,54 @@ const StatusDot = styled(FiberManualRecordIcon, {
 
 const MotionBox = motion.create(Box);
 
-const destinations = [
-  'Tel Aviv',
-  'New York',
-  'London',
-  'Paris',
-  'Dubai',
-  'Frankfurt',
-  'Rome',
-  'Amsterdam',
-];
-
 const ActionBar = ({ onAddFlight, onFilterChange }: ActionBarProps) => {
-  const dispatch = useDispatch();
-  const status = useSelector((state: RootState) => state.filters.status);
-  const destination = useSelector((state: RootState) => state.filters.destination);
-  const searchQuery = useSelector((state: RootState) => state.filters.searchQuery);
+  const dispatch = useAppDispatch();
+  const reduxStatus = useAppSelector((state: RootState) => state.filters.status);
+  const reduxDestination = useAppSelector((state: RootState) => state.filters.destination);
+  const reduxSearchQuery = useAppSelector((state: RootState) => state.filters.searchQuery);
+  const [status, setStatus] = useState(reduxStatus);
+  const [destination, setDestination] = useState(reduxDestination);
+  const [searchQuery, setSearchQuery] = useState(reduxSearchQuery);
   const [isRetrying, setIsRetrying] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const isConnected = useSelector((state: RootState) => state.connection.isConnected);
+  const isConnected = useAppSelector((state: RootState) => state.connection.isConnected);
   const queryClient = useQueryClient();
 
   const handleStatusChange = (value: string) => {
-    dispatch(setStatusFilter(value as FlightStatus | ''));
+    setStatus(value as FlightStatus | '');
   };
   const handleDestinationChange = (value: string) => {
-    dispatch(setDestinationFilter(value));
+    setDestination(value);
   };
   const handleSearchQueryChange = (value: string) => {
-    dispatch(setSearchQuery(value));
+    setSearchQuery(value);
   };
+
   const handleClearFilters = () => {
+    setStatus('');
+    setDestination('');
+    setSearchQuery('');
     dispatch(clearFilters());
     if (onFilterChange) {
       onFilterChange({ status: '', destination: '', searchQuery: '' });
     }
   };
+
+  const handleSearch = () => {
+    dispatch({ type: 'filters/setStatusFilter', payload: status as FlightStatus | '' });
+    dispatch({ type: 'filters/setDestinationFilter', payload: destination });
+    dispatch({ type: 'filters/setSearchQuery', payload: searchQuery });
+    if (onFilterChange) {
+      onFilterChange({ status, destination, searchQuery });
+    }
+  };
+
+  // Keep local state in sync with Redux/global state if filters are reset elsewhere
+  useEffect(() => {
+    setStatus(reduxStatus);
+    setDestination(reduxDestination);
+    setSearchQuery(reduxSearchQuery);
+  }, [reduxStatus, reduxDestination, reduxSearchQuery]);
 
 
   const handleRetryConnection = async () => {
@@ -258,6 +270,16 @@ const ActionBar = ({ onAddFlight, onFilterChange }: ActionBarProps) => {
               startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} />, 
             }}
           />
+         <Button
+           variant="contained"
+           color="primary"
+           startIcon={<SearchIcon />}
+           onClick={handleSearch}
+           fullWidth
+           sx={{ height: '40px', borderRadius: '4px' }}
+         >
+           Search
+         </Button>
           <Button
             variant="outlined"
             color="inherit"
