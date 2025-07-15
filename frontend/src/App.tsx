@@ -24,6 +24,8 @@ const AppContent = () => {
   const [appliedFilters, setAppliedFilters] = useState(filters);
   const queryClient = useQueryClient();
   const handlersRegistered = useRef(false);
+  const [tableRefreshKey, setTableRefreshKey] = useState(0); // For remote refresh animation
+  const localMutationRef = useRef<'add' | 'delete' | null>(null);
 
   useEffect(() => {
     setAppliedFilters(filters);
@@ -41,19 +43,26 @@ const AppContent = () => {
 
       if (!handlersRegistered.current) {
         signalRService.onFlightStatusUpdated((flightId, newStatus) => {
+          // Only refetch, do NOT animate table for status change
           queryClient.refetchQueries({ queryKey: ['flights'] });
         });
 
         signalRService.onFlightStatusesUpdated((statusChanges) => {
-          console.log('SignalR: Received FlightStatusesUpdated event:', statusChanges);
+          // Only refetch, do NOT animate table for status change
           queryClient.refetchQueries({ queryKey: ['flights'] });
         });
 
         signalRService.onFlightAdded((flight) => {
+          if (!localMutationRef.current) {
+            setTableRefreshKey((k) => k + 1);
+          }
           queryClient.refetchQueries({ queryKey: ['flights'] });
         });
 
         signalRService.onFlightDeleted((flightId) => {
+          if (!localMutationRef.current) {
+            setTableRefreshKey((k) => k + 1);
+          }
           queryClient.refetchQueries({ queryKey: ['flights'] });
         });
         handlersRegistered.current = true;
@@ -70,6 +79,12 @@ const AppContent = () => {
 
   const addFlightMutation = useMutation({
     mutationFn: addFlight,
+    onMutate: () => {
+      localMutationRef.current = 'add';
+    },
+    onSettled: () => {
+      localMutationRef.current = null;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['flights'] });
       setIsModalOpen(false);
@@ -78,6 +93,12 @@ const AppContent = () => {
 
   const deleteFlightMutation = useMutation({
     mutationFn: deleteFlight,
+    onMutate: () => {
+      localMutationRef.current = 'delete';
+    },
+    onSettled: () => {
+      localMutationRef.current = null;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['flights'] });
     },
@@ -125,7 +146,7 @@ const AppContent = () => {
         }}
       >
         <ActionBar onAddFlight={handleAddFlight} onFilterChange={handleFilterChange} />
-        <FlightBoard onDeleteFlight={handleDeleteFlight} filters={appliedFilters} />
+        <FlightBoard onDeleteFlight={handleDeleteFlight} filters={appliedFilters} tableRefreshKey={tableRefreshKey} />
         <AddFlightModal
           isOpen={isModalOpen}
           onClose={handleCloseModal}

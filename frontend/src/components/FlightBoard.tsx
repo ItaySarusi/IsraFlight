@@ -1,8 +1,8 @@
 import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Chip, TablePagination } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
-import { useState, useMemo, useEffect } from 'react';
+import { useQuery, QueryClient, useQueryClient } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Flight, FlightStatus } from '../types/flight';
 import { LoadingSpinner } from './LoadingSpinner';
 
@@ -49,6 +49,7 @@ interface FlightBoardProps {
     destination: string;
     searchQuery: string;
   };
+  tableRefreshKey?: number; // Optional, for remote refresh animation
 }
 
 const getStatusColor = (status: FlightStatus) => {
@@ -66,14 +67,14 @@ const getStatusColor = (status: FlightStatus) => {
   }
 };
 
-const FlightBoard = ({ onDeleteFlight, filters }: FlightBoardProps) => {
+const FlightBoard = ({ onDeleteFlight, filters, tableRefreshKey }: FlightBoardProps) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const prevStatuses = useRef<Record<string, FlightStatus>>({});
 
-  const { data: flights = [], isLoading, error } = useQuery<Flight[]>({
+  const { data, isLoading, error } = useQuery<Flight[], Error>({
     queryKey: ['flights', filters],
     queryFn: () => {
-      // If any filter is applied, use search endpoint
       if (filters.status || filters.destination || filters.searchQuery) {
         return searchFlights({
           status: filters.status || undefined,
@@ -81,10 +82,21 @@ const FlightBoard = ({ onDeleteFlight, filters }: FlightBoardProps) => {
           flightNumber: filters.searchQuery || undefined,
         });
       }
-      // Otherwise, fetch all flights
       return fetchFlights();
     },
   });
+  const flights: Flight[] = data || [];
+
+  // Track previous statuses for status change animation
+  useEffect(() => {
+    if (flights) {
+      const map: Record<string, FlightStatus> = {};
+      flights.forEach((f) => {
+        map[f.id] = f.status;
+      });
+      prevStatuses.current = map;
+    }
+  }, [flights]);
 
   // Sort flights by departure time (newest first) and apply pagination
   const sortedAndPaginatedFlights = useMemo(() => {
@@ -159,82 +171,117 @@ const FlightBoard = ({ onDeleteFlight, filters }: FlightBoardProps) => {
   }
 
   return (
-    <Paper
-      component={motion.div}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      sx={{
-        overflow: 'hidden',
-        backgroundColor: 'background.paper',
-      }}
-    >
-      <TableContainer>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Flight Number</TableCell>
-              <TableCell>Destination</TableCell>
-              <TableCell>Departure Time</TableCell>
-              <TableCell>Gate</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {sortedAndPaginatedFlights.map((flight) => (
-              <TableRow
-                key={flight.id}
-                component={motion.tr}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                whileHover={{ backgroundColor: 'rgba(0, 0, 0, 0.04)' }}
-                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-              >
-                <TableCell>{flight.flightNumber}</TableCell>
-                <TableCell>{flight.destination}</TableCell>
-                <TableCell>
-                  {new Date(flight.departureTime).toLocaleDateString()} {new Date(flight.departureTime).toLocaleTimeString()}
-                </TableCell>
-                <TableCell>{flight.gate}</TableCell>
-                <TableCell>
-                  <Chip
-                    label={flight.status}
-                    color={getStatusColor(flight.status)}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell align="right">
-                  <IconButton
-                    onClick={() => onDeleteFlight(flight.id)}
-                    color="error"
-                    size="small"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
+    <AnimatePresence mode="wait">
+      <Paper
+        key={tableRefreshKey}
+        component={motion.div}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.4 }}
+        sx={{
+          overflow: 'hidden',
+          backgroundColor: 'background.paper',
+        }}
+      >
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Flight Number</TableCell>
+                <TableCell>Destination</TableCell>
+                <TableCell>Departure Time</TableCell>
+                <TableCell>Gate</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell align="right">Actions</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      {flights.length > 5 && (
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={flights.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          sx={{
-            borderTop: '1px solid',
-            borderColor: 'divider',
-          }}
-        />
-      )}
-    </Paper>
+            </TableHead>
+            <TableBody
+              key={page}
+              component={motion.tbody}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+            >
+              <AnimatePresence initial={false}>
+                {sortedAndPaginatedFlights.map((flight) => {
+                  const prevStatus = prevStatuses.current[flight.id];
+                  const statusChanged = prevStatus && prevStatus !== flight.status;
+                  return (
+                    <motion.tr
+                      key={flight.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.4 }}
+                      whileHover={{ backgroundColor: 'rgba(0, 0, 0, 0.04)' }}
+                      style={{ position: 'relative' }}
+                    >
+                      <TableCell>{flight.flightNumber}</TableCell>
+                      <TableCell>{flight.destination}</TableCell>
+                      <TableCell>
+                        {new Date(flight.departureTime).toLocaleDateString()} {new Date(flight.departureTime).toLocaleTimeString()}
+                      </TableCell>
+                      <TableCell>{flight.gate}</TableCell>
+                      <TableCell style={{ position: 'relative' }}>
+                        <motion.div
+                          key={flight.status}
+                          initial={statusChanged ? { scale: 1.15, background: 'linear-gradient(90deg, #2196f3 0%, #fffde7 100%)', boxShadow: '0 0 0 0 #fffde7' } : { scale: 1, background: 'transparent', boxShadow: 'none' }}
+                          animate={{
+                            scale: 1,
+                            background: 'transparent',
+                            boxShadow: statusChanged ? '0 0 16px 0 #ffe082' : 'none',
+                            transition: {
+                              background: { duration: 0.7 },
+                              scale: { type: 'spring', stiffness: 300, damping: 20, duration: 0.7 },
+                              boxShadow: { duration: 0.7 },
+                            },
+                          }}
+                          transition={{ duration: 0.7 }}
+                          style={{ display: 'inline-block', borderRadius: 8 }}
+                        >
+                          <Chip
+                            label={flight.status}
+                            color={getStatusColor(flight.status)}
+                            size="small"
+                            sx={{ fontWeight: 600, letterSpacing: 1 }}
+                          />
+                        </motion.div>
+                      </TableCell>
+                      <TableCell align="right">
+                        <IconButton
+                          onClick={() => onDeleteFlight(flight.id)}
+                          color="error"
+                          size="small"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </TableCell>
+                    </motion.tr>
+                  );
+                })}
+              </AnimatePresence>
+            </TableBody>
+          </Table>
+        </TableContainer>
+        {flights.length > 5 && (
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={flights.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            sx={{
+              borderTop: '1px solid',
+              borderColor: 'divider',
+            }}
+          />
+        )}
+      </Paper>
+    </AnimatePresence>
   );
 };
 

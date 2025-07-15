@@ -53,6 +53,9 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
     gate: '',
   });
 
+  const [show, setShow] = useState(isOpen);
+  const [shouldRender, setShouldRender] = useState(isOpen);
+
   // Reset form and errors when modal opens/closes
   useEffect(() => {
     if (isOpen) {
@@ -88,6 +91,18 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
       });
     }
   }, [isLoading, isOpen]);
+
+  // Animate open/close
+  useEffect(() => {
+    if (isOpen) {
+      setShow(true);
+      setShouldRender(true);
+    } else if (show) {
+      // If closing, wait for animation before unmounting
+      setTimeout(() => setShouldRender(false), 300);
+      setShow(false);
+    }
+  }, [isOpen]);
 
   const validate = (name: string, value: string) => {
     switch (name) {
@@ -157,6 +172,13 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
     onClose();
   };
 
+  const handleAnimatedClose = () => {
+    setShow(false);
+    setTimeout(() => {
+      handleClose();
+    }, 300); // Match animation duration
+  };
+
   const isFormInvalid = Object.values(errors).some((err) => err) ||
     !formData.flightNumber ||
     !formData.destination ||
@@ -165,76 +187,84 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
 
   return (
     <AnimatePresence>
-      {isOpen && (
-        <StyledDialog
-          open={isOpen}
-          onClose={handleClose}
+      {shouldRender && (
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: show ? 1 : 0, y: show ? 0 : 40 }}
+          exit={{ opacity: 0, y: 40 }}
+          transition={{ duration: 0.3 }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
-          <DialogTitle sx={{ fontWeight: 600 }}>Add New Flight</DialogTitle>
-          <DialogContent>
-            <FormContainer onSubmit={handleSubmit}>
-              <TextField
-                name="flightNumber"
-                label="Flight Number"
-                value={formData.flightNumber}
-                onChange={handleChange}
-                required
-                fullWidth
-                error={!!errors.flightNumber}
-                helperText={errors.flightNumber}
-                inputProps={{ maxLength: 10 }}
-              />
-              <TextField
-                name="destination"
-                label="Destination"
-                value={formData.destination}
-                onChange={handleChange}
-                required
-                fullWidth
-                error={!!errors.destination}
-                helperText={errors.destination}
-                inputProps={{ maxLength: 20 }}
-              />
-              <TextField
-                name="departureTime"
-                label="Departure Time"
-                type="datetime-local"
-                value={formData.departureTime}
-                onChange={handleChange}
-                required
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-                error={!!errors.departureTime}
-                helperText={errors.departureTime}
-              />
-              <TextField
-                name="gate"
-                label="Gate"
-                value={formData.gate}
-                onChange={handleChange}
-                required
-                fullWidth
-                error={!!errors.gate}
-                helperText={errors.gate}
-                inputProps={{ maxLength: 10 }}
-              />
-            </FormContainer>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleClose} color="inherit">
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              variant="contained"
-              color="primary"
-              disabled={isLoading || isFormInvalid}
-              startIcon={isLoading && <CircularProgress size={20} />}
-            >
-              Add Flight
-            </Button>
-          </DialogActions>
-        </StyledDialog>
+          <StyledDialog
+            open={show}
+            onClose={handleAnimatedClose}
+          >
+            <DialogTitle sx={{ fontWeight: 600 }}>Add New Flight</DialogTitle>
+            <DialogContent>
+              <FormContainer onSubmit={handleSubmit}>
+                <TextField
+                  name="flightNumber"
+                  label="Flight Number"
+                  value={formData.flightNumber}
+                  onChange={handleChange}
+                  required
+                  fullWidth
+                  error={!!errors.flightNumber}
+                  helperText={errors.flightNumber}
+                  inputProps={{ maxLength: 10 }}
+                />
+                <TextField
+                  name="destination"
+                  label="Destination"
+                  value={formData.destination}
+                  onChange={handleChange}
+                  required
+                  fullWidth
+                  error={!!errors.destination}
+                  helperText={errors.destination}
+                  inputProps={{ maxLength: 20 }}
+                />
+                <TextField
+                  name="departureTime"
+                  label="Departure Time"
+                  type="datetime-local"
+                  value={formData.departureTime}
+                  onChange={handleChange}
+                  required
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  error={!!errors.departureTime}
+                  helperText={errors.departureTime}
+                />
+                <TextField
+                  name="gate"
+                  label="Gate"
+                  value={formData.gate}
+                  onChange={handleChange}
+                  required
+                  fullWidth
+                  error={!!errors.gate}
+                  helperText={errors.gate}
+                  inputProps={{ maxLength: 10 }}
+                />
+              </FormContainer>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleAnimatedClose} color="inherit">
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                variant="contained"
+                color="primary"
+                disabled={isLoading || isFormInvalid}
+                startIcon={isLoading && <CircularProgress size={20} />}
+              >
+                Add Flight
+              </Button>
+            </DialogActions>
+          </StyledDialog>
+        </motion.div>
       )}
     </AnimatePresence>
   );
