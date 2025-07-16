@@ -77,6 +77,9 @@ const FlightBoard = ({ onDeleteFlight, filters, tableRefreshKey }: FlightBoardPr
   const [exitingRows, setExitingRows] = useState<string[]>([]);
   const prevFlightsRef = useRef<Flight[]>([]);
 
+  const [pendingPage, setPendingPage] = useState<number | null>(null);
+  const [isPageAnimating, setIsPageAnimating] = useState(false);
+
   const { data, isLoading, error } = useQuery<Flight[], Error>({
     queryKey: ['flights', filters],
     queryFn: () => {
@@ -143,7 +146,13 @@ const FlightBoard = ({ onDeleteFlight, filters, tableRefreshKey }: FlightBoardPr
   }, [flights, page, rowsPerPage]);
 
   const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
+    setPendingPage(newPage);
+    setIsPageAnimating(true);
+    setTimeout(() => {
+      setPage(newPage);
+      setPendingPage(null);
+      setIsPageAnimating(false);
+    }, 400); // match fade animation duration
   };
 
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -325,7 +334,6 @@ const FlightBoard = ({ onDeleteFlight, filters, tableRefreshKey }: FlightBoardPr
               </TableRow>
             </TableHead>
             <TableBody
-              key={page}
               component={motion.tbody}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -333,7 +341,9 @@ const FlightBoard = ({ onDeleteFlight, filters, tableRefreshKey }: FlightBoardPr
               transition={{ duration: 0.25 }}
             >
               <AnimatePresence initial={false}>
-                {displayedRows.map((flight) => {
+                {isPageAnimating && pendingPage !== null
+                  ? [] // Show no rows during page transition
+                  : displayedRows.map((flight) => {
                   const prevStatus = prevStatuses.current[flight.id];
                   const statusChanged = prevStatus && prevStatus !== flight.status;
                   const depDate = new Date(flight.departureTime);
