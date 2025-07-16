@@ -94,13 +94,16 @@ const FlightBoard = ({ onDeleteFlight, filters, tableRefreshKey }: FlightBoardPr
 
   // Track previous statuses for status change animation
   useEffect(() => {
-    if (flights) {
+    // Delay updating prevStatuses until after the animation frame
+    const timeout = setTimeout(() => {
       const map: Record<string, FlightStatus> = {};
       flights.forEach((f) => {
         map[f.id] = f.status;
       });
       prevStatuses.current = map;
-    }
+    }, 50); // 50ms is enough for React to render and Framer Motion to pick up the change
+
+    return () => clearTimeout(timeout);
   }, [flights]);
 
   // --- Row animation logic for first page only ---
@@ -374,19 +377,34 @@ const FlightBoard = ({ onDeleteFlight, filters, tableRefreshKey }: FlightBoardPr
                       >
                         <motion.div
                           key={flight.status}
-                          initial={statusChanged ? { scale: 1.15, background: 'linear-gradient(90deg, #2196f3 0%, #fffde7 100%)', boxShadow: '0 0 0 0 #fffde7' } : { scale: 1, background: 'transparent', boxShadow: 'none' }}
+                          initial={statusChanged
+                            ? {
+                                scale: 1.35,
+                                background: 'radial-gradient(circle, #fff176 0%, #ff9800 60%, #2196f3 100%)',
+                                boxShadow: '0 0 48px 16px #ff9800, 0 0 0 0 #fffde7',
+                                filter: 'brightness(1.5)'
+                              }
+                            : {
+                                scale: 1,
+                                background: 'transparent',
+                                boxShadow: 'none',
+                                filter: 'none'
+                              }
+                          }
                           animate={{
                             scale: 1,
                             background: 'transparent',
-                            boxShadow: statusChanged ? '0 0 16px 0 #ffe082' : 'none',
+                            boxShadow: 'none',
+                            filter: 'none',
                             transition: {
-                              background: { duration: 0.7 },
-                              scale: { type: 'spring', stiffness: 300, damping: 20, duration: 0.7 },
-                              boxShadow: { duration: 0.7 },
+                              background: { duration: 1.2 },
+                              scale: { type: 'spring', stiffness: 350, damping: 18, duration: 1.1 },
+                              boxShadow: { duration: 1.1 },
+                              filter: { duration: 0.7 },
                             },
                           }}
-                          transition={{ duration: 0.7 }}
-                          style={{ display: 'inline-block', borderRadius: 8 }}
+                          transition={{ duration: 1.1 }}
+                          style={{ display: 'inline-block', borderRadius: 14 }}
                         >
                           <Chip
                             label={flight.status}
