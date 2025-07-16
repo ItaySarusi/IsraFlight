@@ -113,7 +113,12 @@ const AppContent = () => {
   };
 
   const handleSubmitFlight = async (flightData: FlightFormData) => {
-    addFlightMutation.mutate(flightData);
+    return new Promise<void>((resolve, reject) => {
+      addFlightMutation.mutate(flightData, {
+        onSuccess: () => resolve(),
+        onError: (error) => reject(error),
+      });
+    });
   };
 
   const handleDeleteFlight = async (id: string) => {

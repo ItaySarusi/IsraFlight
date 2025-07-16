@@ -184,16 +184,115 @@ const FlightBoard = ({ onDeleteFlight, filters, tableRefreshKey }: FlightBoardPr
           backgroundColor: 'background.paper',
         }}
       >
-        <TableContainer>
-          <Table>
+        <TableContainer
+          sx={{
+            '@media (max-width:600px)': {
+              width: 'calc(100vw - 10px)',
+              marginRight: '5px',
+              maxWidth: 'calc(100vw - 10px)',
+            },
+          }}
+        >
+          <Table
+            sx={{
+              '@media (max-width:600px)': {
+                minWidth: 650, // ensure table is wide enough to scroll to actions column
+                overflowX: 'auto', // enable horizontal scroll on the table itself (mobile)
+              },
+            }}
+          >
             <TableHead>
               <TableRow>
-                <TableCell>Flight Number</TableCell>
-                <TableCell>Destination</TableCell>
-                <TableCell>Departure Time</TableCell>
-                <TableCell>Gate</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell align="right">Actions</TableCell>
+                <TableCell
+                  align="left"
+                  sx={{
+                    '@media (max-width:600px)': {
+                      maxWidth: 50,
+                      whiteSpace: 'normal',
+                      wordBreak: 'break-word',
+                      lineHeight: 1.1,
+                      padding: '6px 4px',
+                      textAlign: 'center', // center on mobile
+                    },
+                  }}
+                >
+                  <span className="flight-number-header" style={{ display: 'inline' }}>
+                    <span className="desktop-only" style={{ display: 'inline' }}>
+                      Flight Number
+                    </span>
+                    <span className="mobile-only" style={{ display: 'none' }}>
+                      Flight<br />Number
+                    </span>
+                  </span>
+                </TableCell>
+                <TableCell
+                  align="left"
+                  sx={{
+                    '@media (max-width:600px)': {
+                      textAlign: 'left', // left align on mobile
+                      padding: '6px 2px', // reduce horizontal padding
+                    },
+                  }}
+                >
+                  Destination
+                </TableCell>
+                <TableCell
+                  align="left"
+                  sx={{
+                    '@media (max-width:600px)': {
+                      maxWidth: 50,
+                      whiteSpace: 'normal',
+                      wordBreak: 'break-word',
+                      lineHeight: 1.1,
+                      padding: '6px 2px', // reduce horizontal padding
+                      textAlign: 'center', // center on mobile
+                    },
+                  }}
+                >
+                  <span className="departure-time-header" style={{ display: 'inline' }}>
+                    <span className="desktop-only" style={{ display: 'inline' }}>
+                      Departure Time
+                    </span>
+                    <span className="mobile-only" style={{ display: 'none' }}>
+                      Departure<br />Time
+                    </span>
+                  </span>
+                </TableCell>
+                <TableCell
+                  align="left"
+                  sx={{
+                    '@media (max-width:600px)': {
+                      textAlign: 'left', // left align on mobile
+                    },
+                  }}
+                >
+                  Gate
+                </TableCell>
+                <TableCell
+                  align="left"
+                  className="status-cell"
+                  sx={{
+                    '@media (max-width:600px)': {
+                      textAlign: 'left',
+                    },
+                  }}
+                >
+                  Status
+                </TableCell>
+                <TableCell
+                  align="left"
+                  className="actions-cell"
+                  sx={{
+                    '@media (max-width:600px)': {
+                      textAlign: 'left', // left align actions column on mobile
+                    },
+                    '@media (min-width:601px)': {
+                      textAlign: 'center',
+                    },
+                  }}
+                >
+                  Actions
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody
@@ -208,6 +307,9 @@ const FlightBoard = ({ onDeleteFlight, filters, tableRefreshKey }: FlightBoardPr
                 {sortedAndPaginatedFlights.map((flight) => {
                   const prevStatus = prevStatuses.current[flight.id];
                   const statusChanged = prevStatus && prevStatus !== flight.status;
+                  const depDate = new Date(flight.departureTime);
+                  const dateStr = depDate.toLocaleDateString();
+                  const timeStr = depDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
                   return (
                     <motion.tr
                       key={flight.id}
@@ -220,11 +322,28 @@ const FlightBoard = ({ onDeleteFlight, filters, tableRefreshKey }: FlightBoardPr
                     >
                       <TableCell>{flight.flightNumber}</TableCell>
                       <TableCell>{flight.destination}</TableCell>
-                      <TableCell>
-                        {new Date(flight.departureTime).toLocaleDateString()} {new Date(flight.departureTime).toLocaleTimeString()}
+                      <TableCell
+                        sx={{
+                          '@media (max-width:600px)': {
+                            minWidth: 80,
+                            maxWidth: 100,
+                            fontSize: '0.8rem',
+                            padding: '6px 2px',
+                            textAlign: 'center',
+                          },
+                        }}
+                      >
+                        <span className="mobile-date" style={{ display: 'block' }}>{dateStr}</span>
+                        <span className="mobile-time" style={{ display: 'block' }}>{timeStr}</span>
                       </TableCell>
                       <TableCell>{flight.gate}</TableCell>
-                      <TableCell style={{ position: 'relative' }}>
+                      <TableCell className="status-cell" style={{ position: 'relative' }}
+                        sx={{
+                          '@media (max-width:600px)': {
+                            paddingRight: '48px', // increase space in body (mobile)
+                          },
+                        }}
+                      >
                         <motion.div
                           key={flight.status}
                           initial={statusChanged ? { scale: 1.15, background: 'linear-gradient(90deg, #2196f3 0%, #fffde7 100%)', boxShadow: '0 0 0 0 #fffde7' } : { scale: 1, background: 'transparent', boxShadow: 'none' }}
@@ -249,7 +368,13 @@ const FlightBoard = ({ onDeleteFlight, filters, tableRefreshKey }: FlightBoardPr
                           />
                         </motion.div>
                       </TableCell>
-                      <TableCell align="right">
+                      <TableCell align="center" className="actions-cell"
+                        sx={{
+                          '@media (max-width:600px)': {
+                            textAlign: 'left', // left align actions cell on mobile
+                          },
+                        }}
+                      >
                         <IconButton
                           onClick={() => onDeleteFlight(flight.id)}
                           color="error"

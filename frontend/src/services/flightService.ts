@@ -45,7 +45,15 @@ export const addFlight = async (flightData: FlightFormData): Promise<Flight> => 
     body: JSON.stringify(flightData),
   });
   if (!response.ok) {
-    throw new Error('Failed to add flight');
+    let errorMsg = 'Failed to add flight';
+    let bodyText = '';
+    try {
+      bodyText = await response.text();
+      if (bodyText) errorMsg = bodyText;
+    } catch (e) {
+      // fallback
+    }
+    throw new Error(errorMsg);
   }
   return response.json();
 };

@@ -91,4 +91,40 @@ body {
 ::selection {
   background-color: rgba(255, 112, 67, 0.2);
   color: inherit;
+}
+
+/* Departure Time header force wrap for mobile only */
+@media (max-width: 600px) {
+  .departure-time-header .desktop-only {
+    display: none !important;
+  }
+  .departure-time-header .mobile-only {
+    display: inline !important;
+  }
+}
+@media (min-width: 601px) {
+  .departure-time-header .desktop-only {
+    display: inline !important;
+  }
+  .departure-time-header .mobile-only {
+    display: none !important;
+  }
+}
+
+/* Flight Number header force wrap for mobile only */
+@media (max-width: 600px) {
+  .flight-number-header .desktop-only {
+    display: none !important;
+  }
+  .flight-number-header .mobile-only {
+    display: inline !important;
+  }
+}
+@media (min-width: 601px) {
+  .flight-number-header .desktop-only {
+    display: inline !important;
+  }
+  .flight-number-header .mobile-only {
+    display: none !important;
+  }
 } 

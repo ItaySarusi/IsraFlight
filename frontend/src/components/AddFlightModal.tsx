@@ -33,6 +33,7 @@ const FormContainer = styled('form')(({ theme }) => ({
   flexDirection: 'column',
   gap: theme.spacing(3),
   minWidth: '400px',
+  marginTop: '5px', // Move all fields down by 5px
   [theme.breakpoints.down('sm')]: {
     minWidth: '100%',
   },
@@ -55,6 +56,8 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
 
   const [show, setShow] = useState(isOpen);
   const [shouldRender, setShouldRender] = useState(isOpen);
+  const [apiError, setApiError] = useState('');
+  const [flightNumberDuplicate, setFlightNumberDuplicate] = useState(false);
 
   // Reset form and errors when modal opens/closes
   useEffect(() => {
@@ -71,26 +74,10 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
         departureTime: '',
         gate: '',
       });
+      setApiError('');
+      setFlightNumberDuplicate(false); // Reset duplicate warning on modal open
     }
   }, [isOpen]);
-
-  // Reset form and errors when flight is successfully added
-  useEffect(() => {
-    if (!isLoading && isOpen) {
-      setFormData({
-        flightNumber: '',
-        destination: '',
-        departureTime: '',
-        gate: '',
-      });
-      setErrors({
-        flightNumber: '',
-        destination: '',
-        departureTime: '',
-        gate: '',
-      });
-    }
-  }, [isLoading, isOpen]);
 
   // Animate open/close
   useEffect(() => {
@@ -109,6 +96,7 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
       case 'flightNumber':
         if (value.length > 10) return 'Max 10 characters';
         if (!value) return 'Required';
+        // Do NOT check for duplicate here
         return '';
       case 'destination':
         if (value.length > 20) return 'Max 20 characters';
@@ -129,7 +117,7 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Validate all fields
     const newErrors = {
@@ -139,9 +127,31 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
       gate: validate('gate', formData.gate),
     };
     setErrors(newErrors);
+    setApiError('');
     const hasError = Object.values(newErrors).some((err) => err);
     if (hasError) return;
-    onSubmit(formData);
+    try {
+      await onSubmit(formData);
+      // Only clear form on success
+      setFormData({
+        flightNumber: '',
+        destination: '',
+        departureTime: '',
+        gate: '',
+      });
+      setErrors({
+        flightNumber: '',
+        destination: '',
+        departureTime: '',
+        gate: '',
+      });
+      setApiError(''); // Clear backend error on success
+      setFlightNumberDuplicate(false); // Clear duplicate warning on success
+    } catch (err: any) {
+      if (err && err.message && err.message.toLowerCase().includes('flight number')) {
+        setFlightNumberDuplicate(true);
+      }
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -154,6 +164,9 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
       ...prev,
       [name]: validate(name, value),
     }));
+    if (name === 'flightNumber') {
+      setFlightNumberDuplicate(false); // Hide warning on change
+    }
   };
 
   const handleClose = () => {
@@ -209,10 +222,24 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
                   onChange={handleChange}
                   required
                   fullWidth
-                  error={!!errors.flightNumber}
+                  error={!!errors.flightNumber || flightNumberDuplicate}
                   helperText={errors.flightNumber}
                   inputProps={{ maxLength: 10 }}
+                  sx={{
+                    '& .MuiFormHelperText-root': {
+                      position: 'relative',
+                      zIndex: 10,
+                      background: 'none',
+                      color: '#d32f2f',
+                      fontWeight: 500,
+                    },
+                  }}
                 />
+                {flightNumberDuplicate && (
+                  <div style={{ color: '#d32f2f', fontWeight: 500, fontSize: '0.85rem', marginTop: '-12px', marginBottom: '8px', zIndex: 20, position: 'relative' }}>
+                    Flight number already in use
+                  </div>
+                )}
                 <TextField
                   name="destination"
                   label="Destination"
