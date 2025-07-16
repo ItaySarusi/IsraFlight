@@ -341,7 +341,9 @@ const FlightBoard = ({ onDeleteFlight, filters, tableRefreshKey }: FlightBoardPr
                       key={flight.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={exitingRows.includes(flight.id) ? { opacity: 0, y: -10 } : {}}
+                      exit={exitingRows.includes(flight.id)
+                        ? { opacity: 0, y: -10 } // animate out for row push
+                        : { opacity: 0 }} // fade out for deletion
                       transition={{ duration: 0.4 }}
                       whileHover={{ backgroundColor: 'rgba(0, 0, 0, 0.04)' }}
                       style={{ position: 'relative' }}
