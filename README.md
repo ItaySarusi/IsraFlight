@@ -1,402 +1,134 @@
-# IsraFlight - Real-Time Flight Board Management System
+# IsraFlight - Real-Time Flight Board
 
-A professional, full-stack, real-time flight board management system built with modern development practices. The system features live-updating flight boards, comprehensive backend API for flight management, and a clean, user-friendly UI.
+A real-time flight management system that shows live flight updates. Built with modern web technologies and clean architecture principles.
 
-## 🎯 Project Overview
+## What This Project Does
 
-IsraFlight is a real-time flight management system that demonstrates clean architecture principles, test-driven development, and modern web technologies. The system provides live updates via SignalR, comprehensive flight management capabilities, and a responsive Material-UI frontend.
+Think of this as a digital flight board you'd see at an airport, but it updates in real-time. When someone adds or deletes a flight, everyone sees the changes instantly. Flight statuses (Scheduled, Boarding, Departed, Landed) update automatically based on departure times.
 
-## 🏗️ Architecture
+## How ItsBuilt
 
-### Backend Architecture (Clean Architecture)
+### Backend (ASP.NET Core)
 
-```
-FlightBoard.Api/           # Presentation Layer (Controllers, Hubs)
-FlightBoard.Application/   # Application Layer (Services, Interfaces)
-FlightBoard.Domain/        # Domain Layer (Entities, Enums, Interfaces)
-FlightBoard.Infrastructure/# Infrastructure Layer (Data, Repositories)
-FlightBoard.Tests/         # Unit Tests (xUnit + Moq)
-```
+The backend is organized in layers, each with a specific job:
 
-### Frontend Architecture
+- **API Layer** (`FlightBoard.Api`): Handles HTTP requests and real-time connections
+- **Application Layer** (`FlightBoard.Application`): Contains business logic and services
+- **Domain Layer** (`FlightBoard.Domain`): Defines what a flight is and its rules
+- **Infrastructure Layer** (`FlightBoard.Infrastructure`): Handles database operations
 
-```
-src/
-├── components/           # React Components
-├── services/            # API Services & SignalR
-├── store/              # Redux Toolkit State Management
-├── types/              # TypeScript Type Definitions
-├── theme/              # Material-UI Theme Configuration
-└── hooks/              # Custom React Hooks
-```
+This separation makes the code easier to test and maintain.
 
-## 🚀 Features
+### Frontend (React)
 
-### Core Features
+The frontend is built with React and uses several libraries to handle different concerns:
 
-- ✅ **Real-Time Flight Board**: Live updates via SignalR
-- ✅ **Flight Management**: Add, delete, and search flights
-- ✅ **Server-Side Status Calculation**: Automatic status updates based on departure time
-- ✅ **Advanced Filtering**: Filter by status, destination, and flight number
-- ✅ **Responsive Design**: Material-UI with custom theme
-- ✅ **Connection Management**: Real-time connection status with retry functionality
+- **React**: For building the user interface
+- **Material-UI**: For pre-built, beautiful components
+- **Redux Toolkit**: We only use Redux to manage the filters' state (status, destination, search). We chose not to use Redux for form fields as it felt unnecessary - React's built-in state management works fine for that.
+- **TanStack Query**: Handles fetching and caching flight data from the server
+- **SignalR**: Connects to the backend for real-time updates
+- **Framer Motion**: Adds smooth animations when flights are added, deleted, or their status changes
 
-### Flight Status Logic
+## Real-Time Features
 
-- **Scheduled**: More than 30 minutes before departure
-- **Boarding**: 30 minutes before departure until departure time
-- **Departed**: From departure time until 60 minutes after
+The app uses WebSockets (via SignalR) to push updates instantly:
+
+- When you add a flight, everyone sees it immediately
+- When a flight's status changes (Scheduled → Boarding → Departed → Landed), it updates in real-time
+- When you delete a flight, it disappears from everyone's screen
+
+## Flight Status Logic
+
+The system automatically calculates flight status based on departure time:
+
+- **Scheduled**: More than30s before departure
+- **Boarding**:30s before departure until departure time
+- **Departed**: From departure time until 60minutes after
 - **Landed**: More than 60 minutes after departure time
 
-## 🛠️ Technologies Used
+## Setup and Run Instructions
 
-### Backend
+### Backend Setup1 **Navigate to the backend folder:**
 
-- **ASP.NET Core 8.0** - Web API framework
-- **Entity Framework Core** - ORM with SQLite database
-- **SignalR** - Real-time communication
-- **xUnit + Moq** - Unit testing and mocking
-- **Clean Architecture** - Domain-driven design principles
+```bash
+cd backend/FlightBoard.Api
+```
 
-### Frontend
-
-- **React 18** - UI library with TypeScript
-- **Material-UI (MUI)** - Component library and theming
-- **Redux Toolkit** - State management
-- **TanStack Query (React Query)** - Server state management
-- **SignalR Client** - Real-time communication
-- **Framer Motion** - Animations
-
-### Development Tools
-
-- **TypeScript** - Type-safe JavaScript
-- **ESLint** - Code linting
-- **Prettier** - Code formatting
-
-## 📋 Prerequisites
-
-- .NET 8.0 SDK
-- Node.js 18+ and npm
-- Git
-
-## 🚀 Setup Instructions
-
-### Backend Setup
-
-1. **Clone the repository**
-
-   ```bash
-   git clone <repository-url>
-   cd IsraFlight/backend
-   ```
-
-2. **Restore dependencies**
-
+2. **Install dependencies:**
    ```bash
    dotnet restore
    ```
-
-3. **Run the API**
-
+   3 **Run the API:**
    ```bash
-   cd FlightBoard.Api
    dotnet run
    ```
-
-   The API will be available at `http://localhost:5001`
-
-4. **Run tests**
+   The API will start at `http://localhost:50014un tests (optional):\*\*
    ```bash
    cd ../FlightBoard.Tests
    dotnet test
    ```
 
-### Frontend Setup
+### Frontend Setup1 **Navigate to the frontend folder:**
 
-1. **Navigate to frontend directory**
+```bash
+cd frontend
+```
 
-   ```bash
-   cd ../frontend
-   ```
-
-2. **Install dependencies**
+2. **Install dependencies:**
 
    ```bash
    npm install
    ```
 
-3. **Start development server**
+3. **Start the development server:**
    ```bash
    npm start
    ```
-   The application will be available at `http://localhost:3000`
+   The app will open at `http://localhost:3000`
 
-## 📚 API Endpoints
+## Architectural Choices
 
-### Flight Management
+### Why Clean Architecture?
 
-- `GET /api/flights` - Get all flights
-- `POST /api/flights` - Create a new flight
-- `DELETE /api/flights/{id}` - Delete a flight
-- `GET /api/flights/search` - Search flights with filters
+We separated the backend into layers because it makes the code easier to understand, test, and modify. Each layer has a specific responsibility, and changes in one layer dontbreak others.
 
-### Real-Time Communication
+### Why Redux Only for Filters?
 
-- `POST /flightHub/negotiate` - SignalR negotiation endpoint
-- WebSocket connection for real-time updates
+We use Redux Toolkit to manage filter state (status, destination, search) because these filters affect the entire app and need to be shared between components. For form fields, React's built-in state is simpler and more appropriate.
 
-## 🧪 Testing
+### Why SignalR?
 
-### Test-Driven Development (TDD) Approach
+We chose SignalR (which uses WebSockets) for real-time updates because it provides a reliable, efficient way to push updates to all connected clients without polling the server constantly.
 
-The project follows TDD principles with comprehensive unit tests covering:
+### Why SQLite?
 
-1. **Flight Status Calculation Tests**
+We use SQLite for development because it's lightweight, requires no setup, and stores data in a file. Perfect for development and demos.
 
-   - Tests all status transition scenarios
-   - Validates time-based logic
-   - Ensures proper local time handling
+## Third-Party Libraries Used
 
-2. **Flight Service Tests**
-   - Business logic validation
-   - Error handling scenarios
-   - Repository interaction testing
+### Backend Libraries
 
-### Running Tests
+- **ASP.NET Core 8.0**: Web framework
+- **Entity Framework Core**: Database operations
+- **SignalR**: Real-time communication
+- **SQLite**: Database
+- **xUnit + Moq**: Testing
+- **FluentValidation**: Input validation
+- **Serilog**: Logging
 
-```bash
-cd backend/FlightBoard.Tests
-dotnet test
-```
+### Frontend Libraries
 
-## 🎨 UI Features
+- **React 18**: UI framework
+- **TypeScript**: Type safety
+- **Material-UI (MUI)**: UI components
+- **Redux Toolkit**: State management (filters only)
+- **TanStack Query**: Server state management
+- **SignalR Client**: Real-time communication
+- **Framer Motion**: Animations
+- **React Router**: Navigation (if needed)
 
-### Material-UI Theme
+## Prerequisites
 
-- Custom color palette (orange, gray, black, blueish tones)
-- Responsive design with breakpoints
-- Consistent spacing and typography
-
-### Animations
-
-- Framer Motion for smooth transitions
-- Loading states and hover effects
-- Status change animations
-
-### Real-Time Features
-
-- Live connection status indicator
-- Manual refresh button
-- Automatic status updates
-
-## 🔧 Configuration
-
-### Backend Configuration
-
-- SQLite database (in-memory for development)
-- CORS configured for frontend communication
-- SignalR with automatic reconnection
-
-### Frontend Configuration
-
-- API base URL: `http://localhost:5001`
-- SignalR hub URL: `http://localhost:5001/flightHub`
-- React Query caching and invalidation
-
-## 📦 Third-Party Libraries
-
-### Backend Dependencies
-
-- `Microsoft.AspNetCore.SignalR` - Real-time communication
-- `Microsoft.EntityFrameworkCore.Sqlite` - SQLite database provider
-- `Microsoft.EntityFrameworkCore.Design` - EF Core design-time tools
-- `Swashbuckle.AspNetCore` - API documentation
-- `FluentValidation.AspNetCore` - Server-side validation
-- `Serilog.AspNetCore` - Structured logging
-- `xunit` - Unit testing framework
-- `Moq` - Mocking framework
-
-### Frontend Dependencies
-
-- `@mui/material` - Material-UI components
-- `@mui/icons-material` - Material icons
-- `@reduxjs/toolkit` - Redux state management
-- `react-redux` - React Redux bindings
-- `@tanstack/react-query` - Server state management
-- `@microsoft/signalr` - SignalR client
-- `framer-motion` - Animation library
-- `react-router-dom` - Routing (if needed)
-
-## 🏛️ Architectural Decisions
-
-### Clean Architecture
-
-- **Separation of Concerns**: Each layer has a specific responsibility
-- **Dependency Inversion**: High-level modules don't depend on low-level modules
-- **Testability**: Business logic is isolated and easily testable
-
-### State Management
-
-- **Redux Toolkit**: For client-side state (filters, connection status)
-- **TanStack Query**: For server state (flight data, caching)
-- **SignalR**: For real-time updates
-
-### Database Design
-
-- **SQLite**: Lightweight, file-based database for development
-- **Entity Framework Core**: ORM with code-first approach
-- **Migrations**: Database schema versioning
-
-## 🚀 Deployment
-
-### Docker Deployment (Recommended)
-
-```bash
-# Build and run the entire stack
-docker-compose up --build
-
-# Run in background
-docker-compose up -d --build
-
-# Stop the services
-docker-compose down
-```
-
-### Manual Backend Deployment
-
-1. Build the application: `dotnet publish -c Release`
-2. Deploy to your preferred hosting platform
-3. Configure environment variables for production
-
-### Manual Frontend Deployment
-
-1. Build the application: `npm run build`
-2. Deploy the `build` folder to your hosting platform
-3. Configure environment variables for API endpoints
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Write tests for new features
-4. Ensure all tests pass
-5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 🎯 Future Enhancements
-
-- [x] Docker containerization
-- [x] Structured logging with Serilog
-- [x] FluentValidation for enhanced validation
-- [ ] Integration tests
-- [ ] Performance monitoring
-- [ ] User authentication and authorization
-- [ ] Flight scheduling and recurring flights
-- [ ] Email notifications for status changes
-
-# IsraFlight Project Overview
-
-## Key Architecture and Where to Find Each Feature
-
-### 1. ASP.NET Core Web API
-
-- **Project Root:** `backend/FlightBoard.Api/`
-- **Main Setup:**
-  - `Program.cs` (lines 1–84): Configures the web server, services, and middleware for the API.
-  - `Controllers/FlightsController.cs`: Defines the REST API endpoints for managing flights (GET, POST, DELETE, SEARCH).
-    - Example: `[HttpGet]` and `[HttpPost]` methods expose `/api/flights` endpoints.
-
-### 2. EF Core with SQLite
-
-- **Database Setup:**
-  - `Program.cs` (lines ~30–40):
-    ```csharp
-    builder.Services.AddDbContext<FlightDbContext>(options =>
-        options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")
-            ?? "Data Source=flights.db"));
-    ```
-    This configures Entity Framework Core to use SQLite as the database provider.
-  - `Infrastructure/Data/FlightDbContext.cs`: Defines the EF Core context and the `Flights` table.
-  - `Domain/Entities/Flight.cs`: Defines the `Flight` entity (the table structure).
-- **Where are the records?**
-  - The actual SQLite database file is at `backend/FlightBoard.Api/flights.db`.
-  - You can open this file with [DB Browser for SQLite](https://sqlitebrowser.org/dl/) to view and edit records.
-
-### 3. SignalR Implementation
-
-- **Backend:**
-  - `Hubs/FlightHub.cs`: Defines the SignalR hub, group join/leave, and connection logic.
-    - `OnConnectedAsync`, `JoinFlightBoard`, etc.
-  - `Services/FlightStatusUpdateService.cs`: Uses `IHubContext<FlightHub>` to send real-time updates to clients when flight statuses change.
-    - Look for `SendAsync("FlightStatusesUpdated", ...)` calls.
-  - `Controllers/FlightsController.cs`: Sends SignalR events for flight add/delete.
-    - Look for `SendAsync("FlightAdded", ...)` and `SendAsync("FlightDeleted", ...)`.
-- **Frontend:**
-  - `frontend/src/services/signalRService.ts`: Sets up the SignalR client, connection, and event handlers.
-  - `frontend/src/App.tsx`: Registers event handlers and triggers table updates on SignalR events.
-
-### 4. xUnit Testing Implementation
-
-- **Test Project:**
-  - Typically found in `backend/FlightBoard.Tests/` (or similar).
-  - Test files like `FlightServiceTests.cs`, `FlightStatusCalculationTests.cs`.
-- **xUnit Usage:**
-  - At the top of test files: `using Xunit;`
-  - Test methods are decorated with `[Fact]` or `[Theory]` attributes.
-  - Mocks are created with the Moq library: `using Moq;`
-
----
-
-## What is Unit Testing? What is xUnit?
-
-### What is Unit Testing?
-
-- **Unit testing** is a way to automatically check that small pieces of your code (called "units"—usually functions or methods) work as expected.
-- You write code (tests) that calls your functions with different inputs and checks that the outputs are correct.
-- If you change your code later, you can run the tests again to make sure nothing broke.
-
-### What is xUnit?
-
-- **xUnit** is a popular testing framework for .NET (C#) projects.
-- It lets you write test methods using attributes like `[Fact]` (for a single test) or `[Theory]` (for parameterized tests).
-- xUnit runs your tests and reports which ones pass or fail.
-
-### How Do I Use xUnit in This Project?
-
-1. **Find the test project:**
-   - Usually in `backend/FlightBoard.Tests/`.
-2. **Write a test:**
-   - Create a class (e.g., `FlightServiceTests.cs`).
-   - Add methods with the `[Fact]` attribute:
-     ```csharp
-     [Fact]
-     public void CalculateStatus_Boarding_ReturnsBoarding()
-     {
-         // Arrange
-         var flight = new Flight(...);
-         // Act
-         var status = flight.CalculateStatus();
-         // Assert
-         Assert.Equal(FlightStatus.Boarding, status);
-     }
-     ```
-3. **Run the tests:**
-   - In Visual Studio: Right-click the test project and choose "Run Tests".
-   - Or, in the terminal:
-     ```sh
-     dotnet test backend/FlightBoard.Tests/
-     ```
-   - xUnit will show which tests passed and which failed.
-
-### Why Use Unit Tests?
-
-- They help you catch bugs early.
-- They make it safe to refactor or improve your code.
-- They prove your code works as expected.
-
----
-
-If you want to see a specific example or run a test together, let me know!
+- .NET 80 SDK
+- Node.js 18
