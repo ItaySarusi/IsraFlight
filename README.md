@@ -49,7 +49,11 @@ The system automatically calculates flight status based on departure time:
 
 ## Setup and Run Instructions
 
-### Backend Setup1 **Navigate to the backend folder:**
+### Backend Setup
+
+> **Note:** The database is automatically cleared and seeded with realistic flights to real destinations (e.g., "New York", "London") each time the backend starts. This ensures you always have demo data for testing.
+
+1. **Navigate to the backend folder:**
 
 ```bash
 cd backend/FlightBoard.Api

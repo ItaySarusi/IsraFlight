@@ -11,6 +11,7 @@ using FluentValidation.AspNetCore;
 using Serilog;
 using FlightBoard.Api.Validators;
 using Microsoft.Extensions.Logging;
+using FlightBoard.Api;
 
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
@@ -81,11 +82,13 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<FlightHub>("/flightHub");
 
-// Ensure database is created
+// Ensure database is created and seeded
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<FlightDbContext>();
     context.Database.EnsureCreated();
+    // Seed the database with realistic flights
+    await SeedDatabase.SeedFlightsAsync(app.Services);
 }
 
 app.Run();
