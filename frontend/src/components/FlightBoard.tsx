@@ -1,8 +1,8 @@
-import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Chip, TablePagination } from '@mui/material';
+import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Chip, TablePagination } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { useQuery, QueryClient, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Flight, FlightStatus } from '../types/flight';
 import { LoadingSpinner } from './LoadingSpinner';
 
@@ -93,7 +93,7 @@ const FlightBoard = ({ onDeleteFlight, filters, tableRefreshKey }: FlightBoardPr
       return fetchFlights();
     },
   });
-  const flights: Flight[] = data || [];
+  const flights: Flight[] = useMemo(() => data || [], [data]);
 
   // Track previous statuses for status change animation
   useEffect(() => {

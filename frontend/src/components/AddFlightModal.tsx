@@ -5,13 +5,12 @@ import {
   DialogActions,
   Button,
   TextField,
-  MenuItem,
   styled,
   CircularProgress,
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { FlightFormData, FlightStatus } from '../types/flight';
+import { FlightFormData } from '../types/flight';
 
 interface AddFlightModalProps {
   isOpen: boolean;
@@ -56,7 +55,7 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
 
   const [show, setShow] = useState(isOpen);
   const [shouldRender, setShouldRender] = useState(isOpen);
-  const [apiError, setApiError] = useState('');
+  // const [apiError, setApiError] = useState(''); // Remove if not used
   const [flightNumberDuplicate, setFlightNumberDuplicate] = useState(false);
 
   // Reset form and errors when modal opens/closes
@@ -74,7 +73,7 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
         departureTime: '',
         gate: '',
       });
-      setApiError('');
+      // setApiError('');
       setFlightNumberDuplicate(false); // Reset duplicate warning on modal open
     }
   }, [isOpen]);
@@ -89,7 +88,7 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
       setTimeout(() => setShouldRender(false), 300);
       setShow(false);
     }
-  }, [isOpen]);
+  }, [isOpen, show]);
 
   const validate = (name: string, value: string) => {
     switch (name) {
@@ -139,7 +138,7 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
       gate: validate('gate', formData.gate),
     };
     setErrors(newErrors);
-    setApiError('');
+    // setApiError('');
     const hasError = Object.values(newErrors).some((err) => err);
     if (hasError) return;
     try {
@@ -160,7 +159,7 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
         departureTime: '',
         gate: '',
       });
-      setApiError(''); // Clear backend error on success
+      // setApiError(''); // Clear backend error on success
       setFlightNumberDuplicate(false); // Clear duplicate warning on success
     } catch (err: any) {
       if (err && err.message && err.message.toLowerCase().includes('flight number')) {
