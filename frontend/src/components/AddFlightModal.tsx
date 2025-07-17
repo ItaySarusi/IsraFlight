@@ -143,7 +143,10 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
     const hasError = Object.values(newErrors).some((err) => err);
     if (hasError) return;
     try {
-      await onSubmit(formData);
+      await onSubmit({
+        ...formData,
+        flightNumber: formData.flightNumber.toLowerCase(),
+      });
       // Only clear form on success
       setFormData({
         flightNumber: '',

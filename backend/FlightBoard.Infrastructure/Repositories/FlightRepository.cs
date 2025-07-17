@@ -88,6 +88,6 @@ public class FlightRepository : IFlightRepository
     public async Task<bool> FlightNumberExistsAsync(string flightNumber)
     {
         return await _context.Flights
-            .AnyAsync(f => f.FlightNumber == flightNumber);
+            .AnyAsync(f => f.FlightNumber.ToLower() == flightNumber.ToLower());
     }
 }
