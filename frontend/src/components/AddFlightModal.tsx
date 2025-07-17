@@ -95,12 +95,20 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
     switch (name) {
       case 'flightNumber':
         if (value.length > 10) return 'Max 10 characters';
-        if (!value) return 'Required';
+        if (!value.trim()) return 'Required';
+        // Check for valid flight number format (letters and numbers only)
+        if (!/^[A-Za-z0-9]+$/.test(value.trim())) {
+          return 'Only letters and numbers allowed';
+        }
         // Do NOT check for duplicate here
         return '';
       case 'destination':
         if (value.length > 20) return 'Max 20 characters';
-        if (!value) return 'Required';
+        if (!value.trim()) return 'Required';
+        // Check for valid destination format (letters, spaces, and common punctuation)
+        if (!/^[A-Za-z\s\-.,()]+$/.test(value.trim())) {
+          return 'Only letters, spaces, hyphens, commas, periods, and parentheses allowed';
+        }
         return '';
       case 'departureTime':
         if (!value) return 'Required';
@@ -110,7 +118,11 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
         return '';
       case 'gate':
         if (value.length > 10) return 'Max 10 characters';
-        if (!value) return 'Required';
+        if (!value.trim()) return 'Required';
+        // Check for valid gate format (letters and numbers only)
+        if (!/^[A-Za-z0-9]+$/.test(value.trim())) {
+          return 'Only letters and numbers allowed';
+        }
         return '';
       default:
         return '';
@@ -156,13 +168,20 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    
+    // Filter out invalid characters for flight number and gate
+    let filteredValue = value;
+    if (name === 'flightNumber' || name === 'gate') {
+      filteredValue = value.replace(/[^A-Za-z0-9]/g, '');
+    }
+    
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: filteredValue,
     }));
     setErrors((prev) => ({
       ...prev,
-      [name]: validate(name, value),
+      [name]: validate(name, filteredValue),
     }));
     if (name === 'flightNumber') {
       setFlightNumberDuplicate(false); // Hide warning on change
@@ -193,10 +212,10 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
   };
 
   const isFormInvalid = Object.values(errors).some((err) => err) ||
-    !formData.flightNumber ||
-    !formData.destination ||
+    !formData.flightNumber.trim() ||
+    !formData.destination.trim() ||
     !formData.departureTime ||
-    !formData.gate;
+    !formData.gate.trim();
 
   return (
     <AnimatePresence>
@@ -220,11 +239,21 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
                   label="Flight Number"
                   value={formData.flightNumber}
                   onChange={handleChange}
+                  onKeyPress={(e) => {
+                    // Only allow letters and numbers
+                    const char = String.fromCharCode(e.which);
+                    if (!/[A-Za-z0-9]/.test(char)) {
+                      e.preventDefault();
+                    }
+                  }}
                   required
                   fullWidth
                   error={!!errors.flightNumber || flightNumberDuplicate}
                   helperText={errors.flightNumber}
-                  inputProps={{ maxLength: 10 }}
+                  inputProps={{ 
+                    maxLength: 10,
+                    pattern: '[A-Za-z0-9]*'
+                  }}
                   sx={{
                     '& .MuiFormHelperText-root': {
                       position: 'relative',
@@ -268,11 +297,21 @@ const AddFlightModal = ({ isOpen, onClose, onSubmit, isLoading }: AddFlightModal
                   label="Gate"
                   value={formData.gate}
                   onChange={handleChange}
+                  onKeyPress={(e) => {
+                    // Only allow letters and numbers
+                    const char = String.fromCharCode(e.which);
+                    if (!/[A-Za-z0-9]/.test(char)) {
+                      e.preventDefault();
+                    }
+                  }}
                   required
                   fullWidth
                   error={!!errors.gate}
                   helperText={errors.gate}
-                  inputProps={{ maxLength: 10 }}
+                  inputProps={{ 
+                    maxLength: 10,
+                    pattern: '[A-Za-z0-9]*'
+                  }}
                 />
               </FormContainer>
             </DialogContent>
