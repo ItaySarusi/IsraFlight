@@ -18,6 +18,7 @@ public class FlightServiceTests
         _flightService = new FlightService(_mockRepository.Object);
     }
 
+    // Tests that a valid flight is created successfully
     [Fact]
     public async Task CreateFlightAsync_WithValidData_ShouldCreateFlight()
     {
@@ -45,6 +46,7 @@ public class FlightServiceTests
         _mockRepository.Verify(r => r.AddAsync(It.IsAny<Flight>()), Times.Once);
     }
 
+    // Tests that creating a flight with a past departure time throws an exception
     [Fact]
     public async Task CreateFlightAsync_WithPastDepartureTime_ShouldThrowArgumentException()
     {
@@ -62,6 +64,7 @@ public class FlightServiceTests
         _mockRepository.Verify(r => r.AddAsync(It.IsAny<Flight>()), Times.Never);
     }
 
+    // Tests that creating a flight with an existing flight number throws an exception
     [Fact]
     public async Task CreateFlightAsync_WithExistingFlightNumber_ShouldThrowArgumentException()
     {
@@ -82,6 +85,7 @@ public class FlightServiceTests
         _mockRepository.Verify(r => r.AddAsync(It.IsAny<Flight>()), Times.Never);
     }
 
+    // Tests that updating a flight with a valid ID updates the flight
     [Fact]
     public async Task UpdateFlightAsync_WithValidId_ShouldUpdateFlight()
     {
@@ -106,6 +110,7 @@ public class FlightServiceTests
         _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Flight>()), Times.Once);
     }
 
+    // Tests that updating a flight with an invalid ID returns null
     [Fact]
     public async Task UpdateFlightAsync_WithInvalidId_ShouldReturnNull()
     {
@@ -122,6 +127,7 @@ public class FlightServiceTests
         _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Flight>()), Times.Never);
     }
 
+    // Tests that updating a flight with a past departure time throws an exception
     [Fact]
     public async Task UpdateFlightAsync_WithPastDepartureTime_ShouldThrowArgumentException()
     {
@@ -141,6 +147,7 @@ public class FlightServiceTests
         _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Flight>()), Times.Never);
     }
 
+    // Tests that updating the status of a valid flight updates the status
     [Fact]
     public async Task UpdateFlightStatusAsync_WithValidId_ShouldUpdateStatus()
     {
@@ -162,6 +169,7 @@ public class FlightServiceTests
         _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Flight>()), Times.Once);
     }
 
+    // Tests that updating the status of an invalid flight returns false
     [Fact]
     public async Task UpdateFlightStatusAsync_WithInvalidId_ShouldReturnFalse()
     {
@@ -178,6 +186,7 @@ public class FlightServiceTests
         _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Flight>()), Times.Never);
     }
 
+    // Tests that deleting a valid flight returns true
     [Fact]
     public async Task DeleteFlightAsync_WithValidId_ShouldReturnTrue()
     {
@@ -194,6 +203,7 @@ public class FlightServiceTests
         _mockRepository.Verify(r => r.DeleteAsync(flightId), Times.Once);
     }
 
+    // Tests that deleting an invalid flight returns false
     [Fact]
     public async Task DeleteFlightAsync_WithInvalidId_ShouldReturnFalse()
     {

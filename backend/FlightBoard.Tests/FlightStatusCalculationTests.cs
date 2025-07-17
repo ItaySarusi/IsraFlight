@@ -6,6 +6,7 @@ namespace FlightBoard.Tests;
 
 public class FlightStatusCalculationTests
 {
+    // Tests that a flight more than 30 minutes before departure is marked as Scheduled
     [Fact]
     public void CalculateStatus_WhenMoreThan30MinutesBeforeDeparture_ShouldReturnScheduled()
     {
@@ -20,6 +21,7 @@ public class FlightStatusCalculationTests
         Assert.Equal(FlightStatus.Scheduled, status);
     }
 
+    // Tests that a flight exactly 30 minutes before departure is marked as Boarding
     [Fact]
     public void CalculateStatus_When30MinutesBeforeDeparture_ShouldReturnBoarding()
     {
@@ -34,6 +36,7 @@ public class FlightStatusCalculationTests
         Assert.Equal(FlightStatus.Boarding, status);
     }
 
+    // Tests that a flight less than 30 minutes before departure is marked as Boarding
     [Fact]
     public void CalculateStatus_WhenLessThan30MinutesBeforeDeparture_ShouldReturnBoarding()
     {
@@ -48,6 +51,7 @@ public class FlightStatusCalculationTests
         Assert.Equal(FlightStatus.Boarding, status);
     }
 
+    // Tests that a flight at the exact departure time is marked as Boarding
     [Fact]
     public void CalculateStatus_WhenAtDepartureTime_ShouldReturnBoarding()
     {
@@ -62,6 +66,7 @@ public class FlightStatusCalculationTests
         Assert.Equal(FlightStatus.Boarding, status);
     }
 
+    // Tests that a flight just after departure is marked as Departed
     [Fact]
     public void CalculateStatus_WhenJustAfterDeparture_ShouldReturnDeparted()
     {
@@ -76,6 +81,7 @@ public class FlightStatusCalculationTests
         Assert.Equal(FlightStatus.Departed, status);
     }
 
+    // Tests that a flight 30 minutes after departure is still Departed
     [Fact]
     public void CalculateStatus_When30MinutesAfterDeparture_ShouldReturnDeparted()
     {
@@ -90,6 +96,7 @@ public class FlightStatusCalculationTests
         Assert.Equal(FlightStatus.Departed, status);
     }
 
+    // Tests that a flight 59 minutes after departure is still Departed
     [Fact]
     public void CalculateStatus_When60MinutesAfterDeparture_ShouldReturnDeparted()
     {
@@ -104,6 +111,7 @@ public class FlightStatusCalculationTests
         Assert.Equal(FlightStatus.Departed, status);
     }
 
+    // Tests that a flight more than 60 minutes after departure is marked as Landed
     [Fact]
     public void CalculateStatus_WhenMoreThan60MinutesAfterDeparture_ShouldReturnLanded()
     {
@@ -118,6 +126,7 @@ public class FlightStatusCalculationTests
         Assert.Equal(FlightStatus.Landed, status);
     }
 
+    // Tests that UpdateStatus updates both the status and the UpdatedAt timestamp
     [Fact]
     public void UpdateStatus_ShouldUpdateStatusAndUpdatedAt()
     {
@@ -135,6 +144,7 @@ public class FlightStatusCalculationTests
         Assert.True(flight.UpdatedAt > originalUpdatedAt);
     }
 
+    // Tests that UTC departure times are converted to local time for status calculation
     [Fact]
     public void CalculateStatus_WithUtcTime_ShouldConvertToLocalTime()
     {
