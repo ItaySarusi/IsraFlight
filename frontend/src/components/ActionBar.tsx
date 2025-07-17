@@ -1,17 +1,13 @@
-import { Box, Button, TextField, MenuItem, styled, Chip, IconButton, Tooltip } from '@mui/material';
+import { Box, Button, TextField, MenuItem, styled } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { FlightStatus } from '../types/flight';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { RootState } from '../store';
 import { clearFilters } from '../store/slices/filtersSlice';
-import { signalRService } from '../services/signalRService';
-import { useQueryClient } from '@tanstack/react-query';
 
 interface ActionBarProps {
   onAddFlight: () => void;
@@ -45,20 +41,6 @@ const FiltersContainer = styled(Box)(({ theme }) => ({
   gap: theme.spacing(2),
 }));
 
-const ConnectionStatus = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: theme.spacing(1),
-}));
-
-const StatusDot = styled(FiberManualRecordIcon, {
-  shouldForwardProp: (prop) => prop !== 'isConnected',
-})<{ isConnected?: boolean }>(({ theme, isConnected }) => ({
-  fontSize: '12px',
-  color: isConnected ? theme.palette.success.main : theme.palette.error.main,
-  animation: isConnected ? 'none' : 'pulse 2s infinite',
-}));
-
 const MotionBox = motion.create(Box);
 
 const ActionBar = ({ onAddFlight, onFilterChange }: ActionBarProps) => {
@@ -69,10 +51,6 @@ const ActionBar = ({ onAddFlight, onFilterChange }: ActionBarProps) => {
   const [status, setStatus] = useState(reduxStatus);
   const [destination, setDestination] = useState(reduxDestination);
   const [searchQuery, setSearchQuery] = useState(reduxSearchQuery);
-  const [isRetrying, setIsRetrying] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const isConnected = useAppSelector((state: RootState) => state.connection.isConnected);
-  const queryClient = useQueryClient();
 
   const handleStatusChange = (value: string) => {
     setStatus(value as FlightStatus | '');
@@ -110,46 +88,6 @@ const ActionBar = ({ onAddFlight, onFilterChange }: ActionBarProps) => {
     setSearchQuery(reduxSearchQuery);
   }, [reduxStatus, reduxDestination, reduxSearchQuery]);
 
-
-  const handleRetryConnection = async () => {
-    setIsRetrying(true);
-    try {
-      console.log('Retrying SignalR connection...');
-      
-      // Test if backend is available first
-      const isBackendAvailable = await signalRService.testConnection();
-      if (!isBackendAvailable) {
-        console.error('Backend is not available');
-        return;
-      }
-      
-      await signalRService.stopConnection();
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-      await signalRService.startConnection();
-    } catch (error) {
-      console.error('Failed to retry connection:', error);
-    } finally {
-      setIsRetrying(false);
-    }
-  };
-
-  const handleRefreshData = async () => {
-    setIsRefreshing(true);
-    try {
-      console.log('Refreshing flight data...');
-      
-      // Invalidate and refetch all flight queries
-      await queryClient.invalidateQueries({ queryKey: ['flights'] });
-      
-      // Small delay to show the refresh animation
-      await new Promise(resolve => setTimeout(resolve, 500));
-    } catch (error) {
-      console.error('Failed to refresh data:', error);
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
   return (
     <MotionBox
       initial={{ opacity: 0, y: 20 }}
@@ -174,59 +112,6 @@ const ActionBar = ({ onAddFlight, onFilterChange }: ActionBarProps) => {
           >
             Add Flight
           </Button>
-          <ConnectionStatus>
-            <Tooltip title="Refresh Flight Data">
-              <IconButton
-                size="small"
-                onClick={handleRefreshData}
-                disabled={isRefreshing}
-                sx={{
-                  color: isConnected ? 'success.main' : 'error.main',
-                  '&:hover': {
-                    backgroundColor: isConnected ? 'success.light' : 'error.light',
-                    color: 'white',
-                  },
-                }}
-              >
-                <RefreshIcon 
-                  sx={{ 
-                    fontSize: '16px',
-                    animation: isRefreshing ? 'spin 1s linear infinite' : 'none'
-                  }} 
-                />
-              </IconButton>
-            </Tooltip>
-            <StatusDot isConnected={isConnected} />
-            <Chip
-              label={isConnected ? 'SYSTEM ONLINE' : 'CONNECTING...'}
-              size="small"
-              color={isConnected ? 'success' : 'error'}
-              variant="outlined"
-            />
-            {!isConnected && (
-              <Tooltip title="Retry Connection">
-                <IconButton
-                  size="small"
-                  onClick={handleRetryConnection}
-                  disabled={isRetrying}
-                  sx={{
-                    color: 'error.main',
-                    '&:hover': {
-                      backgroundColor: 'error.light',
-                      color: 'white',
-                    },
-                  }}
-                >
-                  <RefreshIcon 
-                    sx={{ 
-                      fontSize: '16px',
-                      animation: isRetrying ? 'spin 1s linear infinite' : 'none'
-                    }} 
-                  />
-                </IconButton>
-              </Tooltip>
-            )}
-          </ConnectionStatus>
         </TopBar>
 
         <FiltersContainer>
