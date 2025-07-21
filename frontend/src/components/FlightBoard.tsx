@@ -165,6 +165,14 @@ const FlightBoard = ({ onDeleteFlight, filters, tableRefreshKey }: FlightBoardPr
     setPage(0);
   }, [filters]);
 
+  // Fix: Move to previous page if current page is empty after deletion
+  useEffect(() => {
+    // Only check if not on the first page
+    if (page > 0 && displayedRows.length === 0) {
+      setPage(page - 1);
+    }
+  }, [displayedRows.length, page]);
+
   if (isLoading) {
     return (
       <Paper
