@@ -111,37 +111,9 @@ const FlightBoard = ({ onDeleteFlight, filters, tableRefreshKey }: FlightBoardPr
 
   // --- Row animation logic for first page only ---
   useEffect(() => {
-    // Only apply this logic for the first page and 5 rows per page
-    if (page !== 0 || rowsPerPage !== 5) {
-      // fallback to normal pagination logic
-      const sorted = [...flights].sort((a, b) => new Date(b.departureTime).getTime() - new Date(a.departureTime).getTime());
-      setDisplayedRows(sorted.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage));
-      setExitingRows([]);
-      prevFlightsRef.current = sorted;
-      return;
-    }
     const sorted = [...flights].sort((a, b) => new Date(b.departureTime).getTime() - new Date(a.departureTime).getTime());
-    const newRows = sorted.slice(0, 5);
-    const prevRows = prevFlightsRef.current.slice(0, 5);
-    // Detect if a new row is added (length increased or new id at top)
-    if (flights.length > prevFlightsRef.current.length || (prevRows[0] && newRows[0] && prevRows[0].id !== newRows[0].id)) {
-      // Find the row that will be pushed out (present in prevRows but not in newRows)
-      const leavingRow = prevRows.find(f => !newRows.some(nf => nf.id === f.id));
-      if (leavingRow) {
-        setDisplayedRows([...newRows, leavingRow]);
-        setExitingRows([leavingRow.id]);
-        setTimeout(() => {
-          setDisplayedRows(newRows);
-          setExitingRows([]);
-        }, 400); // match animation duration
-      } else {
-        setDisplayedRows(newRows);
-        setExitingRows([]);
-      }
-    } else {
-      setDisplayedRows(newRows);
-      setExitingRows([]);
-    }
+    setDisplayedRows(sorted.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage));
+    setExitingRows([]);
     prevFlightsRef.current = sorted;
   }, [flights, page, rowsPerPage]);
 
