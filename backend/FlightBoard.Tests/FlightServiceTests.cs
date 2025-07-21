@@ -85,67 +85,7 @@ public class FlightServiceTests
         _mockRepository.Verify(r => r.AddAsync(It.IsAny<Flight>()), Times.Never);
     }
 
-    // Tests that updating a flight with a valid ID updates the flight
-    [Fact]
-    public async Task UpdateFlightAsync_WithValidId_ShouldUpdateFlight()
-    {
-        // Arrange
-        var flightId = 1;
-        var existingFlight = new Flight("TEST123", "Old City", DateTime.Now.AddHours(2), "A");
-        var newDestination = "New City";
-        var newGate = "B";
 
-        _mockRepository.Setup(r => r.GetByIdAsync(flightId))
-            .ReturnsAsync(existingFlight);
-        _mockRepository.Setup(r => r.UpdateAsync(It.IsAny<Flight>()))
-            .ReturnsAsync(existingFlight);
-
-        // Act
-        var result = await _flightService.UpdateFlightAsync(flightId, newDestination, null, newGate);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(newDestination, result.Destination);
-        Assert.Equal(newGate, result.Gate);
-        _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Flight>()), Times.Once);
-    }
-
-    // Tests that updating a flight with an invalid ID returns null
-    [Fact]
-    public async Task UpdateFlightAsync_WithInvalidId_ShouldReturnNull()
-    {
-        // Arrange
-        var flightId = 999;
-        _mockRepository.Setup(r => r.GetByIdAsync(flightId))
-            .ReturnsAsync((Flight?)null);
-
-        // Act
-        var result = await _flightService.UpdateFlightAsync(flightId, "New City");
-
-        // Assert
-        Assert.Null(result);
-        _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Flight>()), Times.Never);
-    }
-
-    // Tests that updating a flight with a past departure time throws an exception
-    [Fact]
-    public async Task UpdateFlightAsync_WithPastDepartureTime_ShouldThrowArgumentException()
-    {
-        // Arrange
-        var flightId = 1;
-        var existingFlight = new Flight("TEST123", "Test City", DateTime.Now.AddHours(2), "A");
-        var pastDepartureTime = DateTime.Now.AddHours(-1);
-
-        _mockRepository.Setup(r => r.GetByIdAsync(flightId))
-            .ReturnsAsync(existingFlight);
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<ArgumentException>(
-            () => _flightService.UpdateFlightAsync(flightId, null, pastDepartureTime, null));
-        
-        Assert.Contains("Departure time must be in the future", exception.Message);
-        _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Flight>()), Times.Never);
-    }
 
     // Tests that updating the status of a valid flight updates the status
     [Fact]

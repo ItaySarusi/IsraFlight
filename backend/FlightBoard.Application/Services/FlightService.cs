@@ -47,35 +47,7 @@ public class FlightService : IFlightService
         return await _flightRepository.AddAsync(flight);
     }
 
-    public async Task<Flight?> UpdateFlightAsync(int id, string? destination = null, DateTime? departureTime = null, string? gate = null)
-    {
-        var flight = await _flightRepository.GetByIdAsync(id);
-        if (flight == null)
-        {
-            return null;
-        }
 
-        if (!string.IsNullOrWhiteSpace(destination))
-        {
-            flight.Destination = destination;
-        }
-
-        if (departureTime.HasValue)
-        {
-            if (departureTime.Value <= DateTime.Now)
-            {
-                throw new ArgumentException("Departure time must be in the future.");
-            }
-            flight.DepartureTime = departureTime.Value;
-        }
-
-        if (!string.IsNullOrWhiteSpace(gate))
-        {
-            flight.Gate = gate;
-        }
-
-        return await _flightRepository.UpdateAsync(flight);
-    }
 
     public async Task<bool> UpdateFlightStatusAsync(int id, FlightStatus newStatus)
     {

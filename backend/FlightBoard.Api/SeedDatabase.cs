@@ -16,116 +16,47 @@ public static class SeedDatabase
         context.Flights.RemoveRange(context.Flights);
         await context.SaveChangesAsync();
 
-        // Add realistic flights
-        var flights = new List<Flight>
+        var random = new Random();
+        var now = DateTime.Now;
+        var destinations = new[] { "New York", "London", "Paris", "Los Angeles", "Tokyo", "Sydney", "Toronto", "Berlin", "Rome", "Barcelona", "Amsterdam", "Vienna", "Prague", "Budapest", "Warsaw" };
+        var gates = new[] { "A1", "B2", "C3", "D4", "E5", "F6", "G7", "H8", "I9", "J10", "K11", "L12", "M13", "N14", "O15" };
+        var flights = new List<Flight>();
+        // 5 flights in the next 30 minutes
+        for (int i = 0; i < 5; i++)
         {
-            new Flight
+            var minutesFromNow = random.Next(1, 31); // 1-30 minutes from now
+            flights.Add(new Flight
             {
-                FlightNumber = "LY001",
-                Destination = "New York",
-                DepartureTime = DateTime.Now.AddHours(2),
-                Gate = "A1"
-            },
-            new Flight
+                FlightNumber = $"LY{(i+1).ToString("D3")}",
+                Destination = destinations[i],
+                DepartureTime = now.AddMinutes(minutesFromNow),
+                Gate = gates[i]
+            });
+        }
+        // 5 flights departed 1-30 minutes ago
+        for (int i = 5; i < 10; i++)
+        {
+            var minutesAgo = random.Next(1, 31); // 1-30 minutes ago
+            flights.Add(new Flight
             {
-                FlightNumber = "LY002",
-                Destination = "London",
-                DepartureTime = DateTime.Now.AddHours(3),
-                Gate = "B2"
-            },
-            new Flight
+                FlightNumber = $"LY{(i+1).ToString("D3")}",
+                Destination = destinations[i],
+                DepartureTime = now.AddMinutes(-minutesAgo),
+                Gate = gates[i]
+            });
+        }
+        // 5 flights departed 30-60 minutes ago
+        for (int i = 10; i < 15; i++)
+        {
+            var minutesAgo = random.Next(30, 61); // 30-60 minutes ago
+            flights.Add(new Flight
             {
-                FlightNumber = "LY003",
-                Destination = "Paris",
-                DepartureTime = DateTime.Now.AddHours(4),
-                Gate = "C3"
-            },
-            new Flight
-            {
-                FlightNumber = "LY004",
-                Destination = "Los Angeles",
-                DepartureTime = DateTime.Now.AddHours(5),
-                Gate = "D4"
-            },
-            new Flight
-            {
-                FlightNumber = "LY005",
-                Destination = "Tokyo",
-                DepartureTime = DateTime.Now.AddHours(6),
-                Gate = "E5"
-            },
-            new Flight
-            {
-                FlightNumber = "LY006",
-                Destination = "Sydney",
-                DepartureTime = DateTime.Now.AddHours(7),
-                Gate = "F6"
-            },
-            new Flight
-            {
-                FlightNumber = "LY007",
-                Destination = "Toronto",
-                DepartureTime = DateTime.Now.AddHours(8),
-                Gate = "G7"
-            },
-            new Flight
-            {
-                FlightNumber = "LY008",
-                Destination = "Berlin",
-                DepartureTime = DateTime.Now.AddHours(9),
-                Gate = "H8"
-            },
-            new Flight
-            {
-                FlightNumber = "LY009",
-                Destination = "Rome",
-                DepartureTime = DateTime.Now.AddHours(10),
-                Gate = "I9"
-            },
-            new Flight
-            {
-                FlightNumber = "LY010",
-                Destination = "Barcelona",
-                DepartureTime = DateTime.Now.AddHours(11),
-                Gate = "J10"
-            },
-            new Flight
-            {
-                FlightNumber = "LY011",
-                Destination = "Amsterdam",
-                DepartureTime = DateTime.Now.AddHours(12),
-                Gate = "K11"
-            },
-            new Flight
-            {
-                FlightNumber = "LY012",
-                Destination = "Vienna",
-                DepartureTime = DateTime.Now.AddHours(13),
-                Gate = "L12"
-            },
-            new Flight
-            {
-                FlightNumber = "LY013",
-                Destination = "Prague",
-                DepartureTime = DateTime.Now.AddHours(14),
-                Gate = "M13"
-            },
-            new Flight
-            {
-                FlightNumber = "LY014",
-                Destination = "Budapest",
-                DepartureTime = DateTime.Now.AddHours(15),
-                Gate = "N14"
-            },
-            new Flight
-            {
-                FlightNumber = "LY015",
-                Destination = "Warsaw",
-                DepartureTime = DateTime.Now.AddHours(16),
-                Gate = "O15"
-            }
-        };
-
+                FlightNumber = $"LY{(i+1).ToString("D3")}",
+                Destination = destinations[i],
+                DepartureTime = now.AddMinutes(-minutesAgo),
+                Gate = gates[i]
+            });
+        }
         context.Flights.AddRange(flights);
         await context.SaveChangesAsync();
 

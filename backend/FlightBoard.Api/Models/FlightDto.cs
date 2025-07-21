@@ -21,10 +21,3 @@ public class CreateFlightDto
     public DateTime DepartureTime { get; set; }
     public string Gate { get; set; } = string.Empty;
 }
-
-public class UpdateFlightDto
-{
-    public string? Destination { get; set; }
-    public DateTime? DepartureTime { get; set; }
-    public string? Gate { get; set; }
-}

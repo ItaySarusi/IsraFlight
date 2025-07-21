@@ -111,38 +111,7 @@ public class FlightsController : ControllerBase
         }
     }
 
-    [HttpPut("{id}")]
-    public async Task<ActionResult<FlightDto>> UpdateFlight(int id, [FromBody] UpdateFlightDto updateFlightDto)
-    {
-        try
-        {
-            var flight = await _flightService.UpdateFlightAsync(
-                id,
-                updateFlightDto.Destination,
-                updateFlightDto.DepartureTime,
-                updateFlightDto.Gate);
 
-            if (flight == null)
-            {
-                return NotFound($"Flight with ID {id} not found.");
-            }
-
-            var flightDto = MapToDto(flight);
-
-            // Notify all clients about the updated flight
-            await _hubContext.Clients.Group("FlightBoard").SendAsync("FlightUpdated", flightDto);
-
-            return Ok(flightDto);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Internal server error: {ex.Message}");
-        }
-    }
 
     [HttpDelete("{id}")]
     public async Task<ActionResult> DeleteFlight(int id)
