@@ -1,6 +1,5 @@
 import * as signalR from '@microsoft/signalr';
-import { store } from '../store';
-import { setConnectionStatus } from '../store/slices/connectionSlice';
+// Removed: import { setConnectionStatus } from '../store/slices/connectionSlice';
 
 class SignalRService {
   private connection: signalR.HubConnection | null = null;
@@ -32,17 +31,17 @@ class SignalRService {
 
     this.connection.onreconnecting(() => {
       console.log('SignalR: Reconnecting...');
-      store.dispatch(setConnectionStatus(false));
+      // Removed: store.dispatch(setConnectionStatus(false));
     });
 
     this.connection.onreconnected(() => {
       console.log('SignalR: Reconnected');
-      store.dispatch(setConnectionStatus(true));
+      // Removed: store.dispatch(setConnectionStatus(true));
     });
 
     this.connection.onclose(() => {
       console.log('SignalR: Connection closed');
-      store.dispatch(setConnectionStatus(false));
+      // Removed: store.dispatch(setConnectionStatus(false));
     });
   }
 
@@ -87,10 +86,10 @@ class SignalRService {
       
       await this.connection!.start();
       console.log('SignalR: Connection started successfully');
-      store.dispatch(setConnectionStatus(true));
+      // Removed: store.dispatch(setConnectionStatus(true));
     } catch (error) {
       console.error('Error starting SignalR connection:', error);
-      store.dispatch(setConnectionStatus(false));
+      // Removed: store.dispatch(setConnectionStatus(false));
     } finally {
       this.isConnecting = false;
     }
@@ -105,7 +104,7 @@ class SignalRService {
       this.isConnecting = false;
       await this.connection.stop();
       console.log('SignalR: Connection stopped');
-      store.dispatch(setConnectionStatus(false));
+      // Removed: store.dispatch(setConnectionStatus(false));
     } catch (error) {
       console.error('Error stopping SignalR connection:', error);
     }

@@ -1,13 +1,11 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
 
 interface UIState {
   isAddFlightModalOpen: boolean;
-  isConnected: boolean;
 }
 
 const initialState: UIState = {
   isAddFlightModalOpen: false,
-  isConnected: false,
 };
 
 const uiSlice = createSlice({
@@ -20,11 +18,8 @@ const uiSlice = createSlice({
     closeAddFlightModal: (state) => {
       state.isAddFlightModalOpen = false;
     },
-    setConnectionStatus: (state, action: PayloadAction<boolean>) => {
-      state.isConnected = action.payload;
-    },
   },
 });
 
-export const { openAddFlightModal, closeAddFlightModal, setConnectionStatus } = uiSlice.actions;
+export const { openAddFlightModal, closeAddFlightModal } = uiSlice.actions;
 export default uiSlice.reducer; 
